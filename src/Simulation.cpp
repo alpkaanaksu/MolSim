@@ -110,11 +110,7 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
-        model = Model::lennardJonesModel(
-                deltaT,
-                definition["simulation"]["epsilon"],
-                definition["simulation"]["sigma"]
-        );
+        model = Model::lennardJonesModel(deltaT);
     }
 }
 

@@ -7,7 +7,7 @@
 #include <array>
 
 void Generator::cuboid(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
-                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId) {
+                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma) {
     for (int x = 0; x < size[0]; x++) {
         for (int y = 0; y < size[1]; y++) {
             for (int z = 0; z < size[2]; z++) {
@@ -18,6 +18,8 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
                                        },
                                        velocity,
                                        mass,
+                                       epsilon,
+                                       sigma,
                                        typeId}
                 );
             }
@@ -27,7 +29,7 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
 
 // Iterate over a cubic area around the sphere with the given parameters and add a particle to container if it is inside the sphere boundaries
 void Generator::sphere(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,
-                       std::array<double, 3> velocity, double mass, int typeId) {
+                       std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma) {
 
     // Distance from the center to the edge of the sphere
     double dis = radius * meshWidth;
@@ -48,7 +50,7 @@ void Generator::sphere(ParticleContainer &container, std::array<double, 3> cente
 
                 // Check if the particle is inside the sphere boundaries
                 if (normalizedDistance <= radius) {
-                    container.add(Particle{position, velocity, mass, typeId});
+                    container.add(Particle{position, velocity, mass, epsilon, sigma, typeId});
                 }
             }
         }
@@ -57,7 +59,7 @@ void Generator::sphere(ParticleContainer &container, std::array<double, 3> cente
 
 // Iterate over a square area around the disk with the given parameters and add a particle to container if it is inside the disk boundaries
 void Generator::disk(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,
-                       std::array<double, 3> velocity, double mass, int typeId) {
+                       std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma) {
 
     double dis = radius * meshWidth;
     double minBoundX = center[0] - dis;
@@ -70,7 +72,7 @@ void Generator::disk(ParticleContainer &container, std::array<double, 3> center,
             std::array<double, 3> position = {x, y, center[2]};
             double normalizedDistance = ArrayUtils::L2Norm(position - center) / meshWidth;
             if (normalizedDistance <= radius) {
-                container.add(Particle{position, velocity, mass, typeId});
+                container.add(Particle{position, velocity, mass, epsilon, sigma,typeId});
             }
         }
     }
