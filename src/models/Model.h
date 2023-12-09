@@ -111,8 +111,12 @@ public:
      * @param sigma distance at which the inter-particle potential is zero.
      * @return A Model object configured with the basic formulas for velocity, position calculation and Lennard Jones potential formula for force calculation
      */
-    static Model lennardJonesModel(double deltaT, double epsilon, double sigma) {
-        auto ljForce = [epsilon, sigma](Particle &p1, Particle &p2) {
+    static Model lennardJonesModel(double deltaT) {
+        auto ljForce = [](Particle &p1, Particle &p2) {
+            // Lorentz-Berthelot mixing rules
+            auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
+            auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
+
             auto distance = p2.distanceTo(p1);
             auto distance6 = std::pow(distance, 6);
             auto sigma6 = std::pow(sigma, 6);
