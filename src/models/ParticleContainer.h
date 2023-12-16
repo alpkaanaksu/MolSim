@@ -87,5 +87,7 @@ public:
      */
     const std::vector<Particle> &getParticles() const;
 
+    virtual void applyToAllHalo(const std::function<void(Particle &)> &function);
+
     virtual std::string toString();
 };

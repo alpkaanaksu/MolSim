@@ -136,7 +136,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     // Iterate through all cells in the container
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         // Skip halo cells
-        if (!isHaloCellVector[cellIndex]) continue;
+        //if (!isHaloCellVector[cellIndex]) continue;
 
         auto coords = index1dTo3d(cellIndex);
         auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
@@ -159,9 +159,9 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
                     int neighborY = coords[1] + y;
                     int neighborZ = coords[2] + z;
 
-                    if (neighborX <= 0 || neighborX >= xCells - 1
+                    /*if (neighborX <= 0 || neighborX >= xCells - 1
                         || neighborY <= 0 || neighborY >= yCells - 1
-                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;
+                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
 
                     if (x == 0 && y == 0 && z == 0) continue;
 
@@ -191,7 +191,19 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
     }
 }
 
+void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Particle&)>& function) {
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        for (auto& particle : cells[cellIndex]) {
+            particle.setType(isHaloCellVector[cellIndex] ? 2 : 1);
+
+            function(particle);
+        }
+    }
+}
+
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
+    deleteParticlesInHaloCells();
+
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
@@ -203,6 +215,8 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
             updateParticleCell(cellIndex);
         }
     }
+
+    updateHaloCells();
 }
 
 void LinkedCellParticleContainer::add(const Particle &particle) {
@@ -226,6 +240,7 @@ void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
     for (auto it = cell.begin(); it != cell.end();) {
 
         vectorReverseReflection(*it);
+        handlePeriodicBoundary(*it);
 
         int newCellIndex = cellIndexForParticle(*it);
 
@@ -234,18 +249,6 @@ void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
             it = cell.erase(it);  // Remove the particle from the old cell
         } else {
             ++it;
-        }
-    }
-}
-
-void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
-    // Iterate through halo cells
-    for (int haloIndex : haloCellIndices) {
-        int cellIndex = haloIndex;
-
-        if (isHaloCellVector[haloIndex]) {
-            // Delete particles in the halo cell
-            cells[cellIndex].clear();
         }
     }
 }
@@ -322,6 +325,110 @@ void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
     }
 }
 
+double LinkedCellParticleContainer::updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+
+    return axisPosition - maxSize;
+}
+
+double LinkedCellParticleContainer::updatePositionOnLowerPeriodic(const double axisPosition, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+
+    return axisPosition + maxSize;
+}
+
+
+void LinkedCellParticleContainer::handlePeriodicBoundary(Particle& particle) {
+    std::array<double, 3> updatedPosition = particle.getX();
+
+    if(particle.getX()[0] > xSize && boundaryBehaviorRight == BoundaryBehavior::Periodic) {
+        updatedPosition[0] = updatePositionOnUpperPeriodic(updatedPosition[0], 0);
+    }else if(particle.getX()[0] < 0 && boundaryBehaviorLeft == BoundaryBehavior::Periodic) {
+        updatedPosition[0] = updatePositionOnLowerPeriodic(updatedPosition[0], 0);
+    }
+
+    if(particle.getX()[1] > ySize && boundaryBehaviorTop == BoundaryBehavior::Periodic) {
+        updatedPosition[1] = updatePositionOnUpperPeriodic(updatedPosition[1], 1);
+    } else if(particle.getX()[1] < 0 && boundaryBehaviorBottom == BoundaryBehavior::Periodic) {
+        updatedPosition[1] = updatePositionOnLowerPeriodic(updatedPosition[1], 1);
+    }
+
+    if(particle.getX()[2] > zSize && boundaryBehaviorFront == BoundaryBehavior::Periodic) {
+        updatedPosition[2] = updatePositionOnUpperPeriodic(updatedPosition[2], 2);
+    } else if(particle.getX()[2] < 0 && boundaryBehaviorBack == BoundaryBehavior::Periodic) {
+        updatedPosition[2] = updatePositionOnLowerPeriodic(updatedPosition[2], 2);
+    }
+
+    particle.setX(updatedPosition);
+}
+
+void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
+    // Iterate through halo cells
+    for (int haloIndex : haloCellIndices) {
+        // Delete particles in the halo cell
+        cells[haloIndex].clear();
+    }
+}
+
+void LinkedCellParticleContainer::updateHaloCells() {
+    for (int boundaryCellIndex : boundaryCellIndices) {
+        std::array<int, 3> boundary3d = index1dTo3d(boundaryCellIndex);
+
+        if (boundaryBehaviorLeft == BoundaryBehavior::Periodic && boundary3d[0] == xCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 0);
+        } else if (boundaryBehaviorRight == BoundaryBehavior::Periodic && boundary3d[0] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 0);
+        }
+
+        if (boundaryBehaviorBottom == BoundaryBehavior::Periodic && boundary3d[1] == yCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 1);
+        } else if (boundaryBehaviorTop == BoundaryBehavior::Periodic && boundary3d[1] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 1);
+        }
+
+        if (boundaryBehaviorBack == BoundaryBehavior::Periodic && boundary3d[2] == zCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 2);
+        } else if (boundaryBehaviorFront == BoundaryBehavior::Periodic && boundary3d[2] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 2);
+        }
+    }
+}
+
+void LinkedCellParticleContainer::upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+    int minCells = 0;
+
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[axisIndex] = minCells;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
+
+    for(auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[axisIndex] = updatedPosition[axisIndex] - maxSize;
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getType());
+
+        spdlog::info("Adding particle to halo cell: {}, {}, {}", newParticle.getX()[0], newParticle.getX()[1], newParticle.getX()[2]);
+        addParticleToCell(haloCellIndex, newParticle);
+    }
+}
+
+
+void LinkedCellParticleContainer::lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+    int maxCells = axisIndex == 0 ? xCells : axisIndex == 1 ? yCells : zCells;
+
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[axisIndex] = maxCells - 1;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
+
+    for(auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[axisIndex] = updatedPosition[axisIndex] + maxSize;
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getType());
+
+        addParticleToCell(haloCellIndex, newParticle);
+    }
+}
 
 std::string LinkedCellParticleContainer::toString() {
     std::stringstream stream;
