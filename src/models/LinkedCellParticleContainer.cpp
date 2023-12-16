@@ -183,7 +183,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
 
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
-        if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
+        //if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
         for (auto& particle : cells[cellIndex]) {
             function(particle);
