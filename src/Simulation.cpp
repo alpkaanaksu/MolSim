@@ -104,6 +104,9 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
     out = definition["simulation"]["output_path"];
     in = filepath;
     outputType = outputWriter::stringToOutputType(definition["simulation"]["output_type"]);
+    gravity = definition["simulation"].contains("gravity")
+            ? (double) definition["simulation"]["gravity"]
+            : 0.0;
 
     particles->add(definition["objects"]);
 
@@ -164,6 +167,7 @@ void Simulation::run() {
 
         // calculate new f
         particles->applyToAll(resetForce);
+
         particles->applyToAllPairsOnce(force);
 
         // calculate new v
@@ -225,6 +229,7 @@ std::string Simulation::toString() const {
     stream << "\n====== Simulation ======"
         << "\nEnd time: " << endTime
         << "\nTime delta: " << deltaT
+        << "\nGravity: " << gravity
         << "\nVideo duration (s): " << videoDuration
         << "\nFrames per second: " << fps
         << "\n"

@@ -9,6 +9,7 @@
 #include "functional"
 #include "Particle.h"
 #include "utils/ArrayUtils.h"
+#include <array>
 
 /**
  * Model class
@@ -41,6 +42,10 @@ public:
             p.updateF(std::array<double, 3> {0., 0., 0.});
         };
     };
+
+    static std::array<double, 3> verticalGravityForce(double m, double g) {
+        return m * std::array<double, 3> {0, -g, 0};
+    }
 
     /**
      * @brief Returns the function for force
