@@ -44,7 +44,7 @@ public:
     };
 
     static std::array<double, 3> verticalGravityForce(double m, double g) {
-        return m * std::array<double, 3> {0, -g, 0};
+        return {0, m * g, 0};
     }
 
     /**

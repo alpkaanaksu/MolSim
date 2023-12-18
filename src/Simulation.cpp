@@ -142,8 +142,18 @@ void Simulation::run() {
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
+
+    auto combinedForce = gravity != 0
+            ? [force, this](Particle &p1, Particle &p2) {
+                force(p1, p2);
+
+                p1.setF(p1.getF() + Model::verticalGravityForce(p1.getM(), gravity));
+                p2.setF(p2.getF() + Model::verticalGravityForce(p2.getM(), gravity));
+            }
+            : force;
+
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
+    particles->applyToAllPairsOnce(combinedForce);
 
     // Brownian Motion for all particles
     particles->applyToAll([](Particle &p) {
@@ -168,7 +178,7 @@ void Simulation::run() {
         // calculate new f
         particles->applyToAll(resetForce);
 
-        particles->applyToAllPairsOnce(force);
+        particles->applyToAllPairsOnce(combinedForce);
 
         // calculate new v
         particles->applyToAll(velocity);
@@ -188,7 +198,7 @@ void Simulation::run() {
 
         double percentage = current_time / endTime * 100;
 
-        std::cout << std::fixed << std::setprecision(2) <<"Running simulation: [ " <<current_time / endTime * 100 << "% ] "  << "\r" << std::flush;
+        std::cout << std::fixed << std::setprecision(2) <<"Running simulation: [ " << current_time / endTime * 100 << "% ] "  << "\r" << std::flush;
 
         current_time += deltaT;
     }
