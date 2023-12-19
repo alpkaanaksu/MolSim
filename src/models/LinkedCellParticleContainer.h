@@ -271,8 +271,13 @@ public:
     void revertParticleVelocity(Particle &particle, int axisIndex);
 
     std::array<double, 3>
-    updatePositionOnReflection(Particle &particle, std::array<double, 3> &currentPos, int axisIndex, bool isMaxBoundary,
+    updatePositionOnReflection(Particle &particle, std::array<double, 3> currentPos, int axisIndex, bool isMaxBoundary,
                                double distanceToMove);
+
+    std::array<double, 3> updatePositionOnReflection(Particle &particle, int axisIndex, bool isMaxBoundary);
+
+    std::array<double, 3>
+    updatePositionOnReflection(Particle &particle, double axisMin, double axisMax, int axisIndex, bool isMaxBoundary);
 };
 
 
