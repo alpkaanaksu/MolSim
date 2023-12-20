@@ -1,6 +1,13 @@
 {
   "simulation": {
     "model": "lennard_jones",
+    "thermostat": {
+      "dimension": 2,
+      "initial_temperature": 40,
+      "interval": 1000,
+      "target_temperature": 40,
+      "brownian": false
+    },
     "particle_container": {
       "type": "linked_cell",
       "dimensions": [63, 36, 2.5],
@@ -10,7 +17,7 @@
       }
     },
     "end_time": 25,
-    "time_delta": 0.00001,
+    "time_delta": 0.0001,
     "video_duration": 40,
     "frame_rate": 24,
     "output_type": "vtk",
