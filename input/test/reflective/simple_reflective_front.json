@@ -3,29 +3,29 @@
     "model": "lennard_jones",
     "particle_container": {
       "type": "linked_cell",
-      "dimensions": [4, 4, 50],
+      "dimensions": [4, 4, 40],
       "cutoff_radius": 3,
       "boundary": {
         "top": "outflow",
         "bottom": "outflow",
         "right": "outflow",
         "left": "outflow",
-        "front": "reflective",
-        "back": "outflow"
+        "front": "outflow",
+        "back": "reflective"
       }
     },
     "end_time": 2,
     "time_delta": 0.002,
     "video_duration": 5,
     "frame_rate": 24,
-    "output_type": "disabled",
+    "output_type": "vtk",
     "output_path": "output"
   },
   "objects": [
     {
       "type": "cuboid",
       "type_id": 1,
-      "position": [2, 2, 40],
+      "position": [2, 2, 30],
       "velocity": [0, 0, 20],
       "size": [1, 1, 1],
       "mesh_width": 1.1225,
