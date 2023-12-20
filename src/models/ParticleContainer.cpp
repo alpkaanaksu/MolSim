@@ -53,16 +53,27 @@ void ParticleContainer::add(const Particle &particle) {
 void ParticleContainer::add(const nlohmann::json &objects) {
     for (auto &object: objects) {
         if (object["type"] == "particle") {
-            add(Particle{object["position"], object["velocity"], object["mass"], object["type_id"]});
+            std::array<double, 3> f = {0., 0., 0.};
+            std::array<double, 3> old_f = {0., 0., 0.};
+
+            if (object.contains("f")) {
+                f = object["f"];
+            }
+
+            if (object.contains("old_f")) {
+                old_f = object["old_f"];
+            }
+
+            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"]});
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "sphere") {
             Generator::sphere(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "disk") {
             Generator::disk(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "checkpoint") {
             resolveCheckpoint(object["path"]);
         }

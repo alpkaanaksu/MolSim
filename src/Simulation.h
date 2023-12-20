@@ -29,8 +29,8 @@ private:
     Model model;
     outputWriter::OutputType outputType;
     int checkpoint;
+    double gravity;
     Thermostat thermostat;
-
 
 public:
     /**

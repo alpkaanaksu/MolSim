@@ -105,17 +105,16 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
     out = definition["simulation"]["output_path"];
     in = filepath;
     outputType = outputWriter::stringToOutputType(definition["simulation"]["output_type"]);
+    gravity = definition["simulation"].contains("gravity")
+            ? (double) definition["simulation"]["gravity"]
+            : 0.0;
 
     particles->add(definition["objects"]);
 
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
-        model = Model::lennardJonesModel(
-                deltaT,
-                definition["simulation"]["epsilon"],
-                definition["simulation"]["sigma"]
-        );
+        model = Model::lennardJonesModel(deltaT);
     }
 
     if(definition["simulation"].contains("thermostat")){
@@ -183,8 +182,18 @@ void Simulation::run() {
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
+
+    auto combinedForce = gravity != 0
+            ? [force, this](Particle &p1, Particle &p2) {
+                force(p1, p2);
+
+                p1.setF(p1.getF() + Model::verticalGravityForce(p1.getM(), gravity));
+                p2.setF(p2.getF() + Model::verticalGravityForce(p2.getM(), gravity));
+            }
+            : force;
+
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
+    particles->applyToAllPairsOnce(combinedForce);
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != 5 && thermostat.isInitializeWithBrownianMotion()) {
@@ -214,7 +223,8 @@ void Simulation::run() {
 
         // calculate new f
         particles->applyToAll(resetForce);
-        particles->applyToAllPairsOnce(force);
+
+        particles->applyToAllPairsOnce(combinedForce);
 
         // calculate new v
         particles->applyToAll(velocity);
@@ -281,16 +291,18 @@ void Simulation::plotParticles(int iteration) {
 std::string Simulation::toString() const {
     std::stringstream stream;
     stream << "\n====== Simulation ======"
-           << "\nEnd time: " << endTime
-           << "\nTime delta: " << deltaT
-           << "\nVideo duration (s): " << videoDuration
-           << "\nFrames per second: " << fps
-           << "\n"
-           << "\nReading from: " << in
-           << "\nOutput to: " << out << '/'
-           << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
-           << "\n" << particles->toString()
-           << "\n========================\n";
+        << "\nEnd time: " << endTime
+        << "\nTime delta: " << deltaT
+        << "\nGravity: " << gravity
+        << "\nVideo duration (s): " << videoDuration
+        << "\nFrames per second: " << fps
+        << "\n"
+        << "\nReading from: " << in
+        << "\nOutput to: " << out << '/'
+        << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
+        << "\n" << particles->toString()
+        << "\n========================\n";
+  
     return stream.str();
 }
 

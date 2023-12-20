@@ -19,9 +19,7 @@
     "video_duration": 5,
     "frame_rate": 24,
     "output_type": "disabled",
-    "output_path": "output",
-    "sigma": 1,
-    "epsilon": 5
+    "output_path": "output"
   },
   "objects": [
     {
@@ -31,7 +29,9 @@
       "velocity": [20, 0, 0],
       "size": [1, 1, 1],
       "mesh_width": 1.1225,
-      "mass": 1
+      "mass": 1,
+      "epsilon": 5,
+      "sigma": 1
     }
   ]
 }

@@ -12,8 +12,8 @@ protected:
     Particle particle2;
 
     void SetUp() override {
-        particle1 = Particle(std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{0.1, 0.2, 0.3}, 2.0, 2);
-        particle2 = Particle(std::array<double, 3>{2.0, 3.0, 0.0}, std::array<double, 3>{0.1, 0.2, 0.3}, 2.0, 2);
+        particle1 = Particle(std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{0.1, 0.2, 0.3}, 2.0, 5, 1, 2);
+        particle2 = Particle(std::array<double, 3>{2.0, 3.0, 0.0}, std::array<double, 3>{0.1, 0.2, 0.3}, 2.0, 5, 1, 2);
     }
 };
 
@@ -33,8 +33,8 @@ TEST_F(ParticleTest, TestDiffTo) {
 TEST_F(ParticleTest, TestDistanceTo) {
     spdlog::info("Starting TestDistanceTo");
 
-    Particle particle1({1.0, 2.0, 3.0}, {0.0, 0.0, 0.0}, 1.0, 1);
-    Particle particle2({1.0, 6.0, 3.0}, {0.0, 0.0, 0.0}, 1.0, 2);
+    Particle particle1({1.0, 2.0, 3.0}, {0.0, 0.0, 0.0}, 1.0, 5, 1, 1);
+    Particle particle2({1.0, 6.0, 3.0}, {0.0, 0.0, 0.0}, 1.0, 5, 1, 2);
 
     double distance = particle1.distanceTo(particle2);
 
