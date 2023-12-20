@@ -7,6 +7,7 @@
 #include "string"
 #include "functional"
 #include "models/Model.h"
+#include "utils/Thermostat.h"
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
@@ -27,6 +28,9 @@ private:
     std::shared_ptr<ParticleContainer> particles;
     Model model;
     outputWriter::OutputType outputType;
+    int checkpoint;
+    double gravity;
+    Thermostat thermostat;
 
 public:
     /**
@@ -36,7 +40,9 @@ public:
      *
      * @param filepath
      */
-    Simulation(const std::string &filepath);
+    explicit Simulation(const std::string &filepath);
+
+    Simulation(const std::string &filepath, const int checkpoint);
 
     /**
      * Constructor for a Simulation object
@@ -94,4 +100,3 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation);
-

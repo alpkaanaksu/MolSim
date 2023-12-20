@@ -14,19 +14,14 @@
     "video_duration": 40,
     "frame_rate": 24,
     "output_type": "vtk",
-    "output_path": "output"
+    "output_path": "output",
+    "sigma": 1,
+    "epsilon": 5
   },
   "objects": [
     {
-      "type": "disk",
-      "type_id": 1,
-      "center": [60, 25, 1],
-      "velocity": [0, -10, 0],
-      "radius": 15,
-      "mesh_width": 1.1225,
-      "mass": 1,
-      "epsilon": 5,
-      "sigma": 1
+      "type": "checkpoint",
+      "path": "./cp1.cp.json"
     }
   ]
 }

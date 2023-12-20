@@ -220,7 +220,11 @@ public:
      * @param axisIndex
      * @return true if reflected, else false
      */
+    //void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
+
     bool reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
+
+    nlohmann::ordered_json json();
 
     std::string toString();
 
@@ -266,6 +270,7 @@ public:
 
     BoundaryBehavior getBoundaryBehaviorBack() const;
 
+
     double updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex);
 
     double updatePositionOnLowerPeriodic(const double axisPosition, int axisIndex);
@@ -279,6 +284,17 @@ public:
     void updateHaloCells();
 
     void applyToAllHalo(const std::function<void(Particle &)> &function);
+
+    void revertParticleVelocity(Particle &particle, int axisIndex);
+
+    std::array<double, 3>
+    updatePositionOnReflection(Particle &particle, std::array<double, 3> currentPos, int axisIndex, bool isMaxBoundary,
+                               double distanceToMove);
+
+    std::array<double, 3> updatePositionOnReflection(Particle &particle, int axisIndex, bool isMaxBoundary);
+
+    std::array<double, 3>
+    updatePositionOnReflection(Particle &particle, double axisMin, double axisMax, int axisIndex, bool isMaxBoundary);
 };
 
 

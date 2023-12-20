@@ -9,6 +9,7 @@
 #include "Simulation.h"
 #include "io/reader/FileReader.h"
 #include "io/reader/JSONReader.h"
+#include "io/outputWriter/JSONWriter.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/VTKWriter.h"
 #include "io/outputWriter/XYZWriter.h"
@@ -19,9 +20,10 @@
 
 using json = nlohmann::json;
 
-Simulation::Simulation(const std::string &filepath) {
-    json definition = JSONReader::readFile(filepath);
+Simulation::Simulation(const std::string &filepath) : Simulation(filepath, -1) {}
 
+Simulation::Simulation(const std::string &filepath, const int checkpoint) : checkpoint(checkpoint) {
+    json definition = JSONReader::readFile(filepath);
 
     if (definition["simulation"]["particle_container"]["type"] == "basic") {
         particles = std::make_shared<ParticleContainer>();
@@ -35,7 +37,8 @@ Simulation::Simulation(const std::string &filepath) {
             auto back = BoundaryBehavior::Reflective;
 
             if (definition["simulation"]["particle_container"]["boundary"].contains("all")) {
-                auto behavior = stringToBoundaryBehavior(definition["simulation"]["particle_container"]["boundary"]["all"]);
+                auto behavior = stringToBoundaryBehavior(
+                        definition["simulation"]["particle_container"]["boundary"]["all"]);
                 top = behavior;
                 bottom = behavior;
                 left = behavior;
@@ -93,6 +96,8 @@ Simulation::Simulation(const std::string &filepath) {
         }
     }
 
+    particles->setSource(filepath);
+
     endTime = definition["simulation"]["end_time"];
     deltaT = definition["simulation"]["time_delta"];
     videoDuration = definition["simulation"]["video_duration"];
@@ -100,22 +105,60 @@ Simulation::Simulation(const std::string &filepath) {
     out = definition["simulation"]["output_path"];
     in = filepath;
     outputType = outputWriter::stringToOutputType(definition["simulation"]["output_type"]);
+    gravity = definition["simulation"].contains("gravity")
+            ? (double) definition["simulation"]["gravity"]
+            : 0.0;
 
     particles->add(definition["objects"]);
 
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
-        model = Model::lennardJonesModel(
-            deltaT,
-            definition["simulation"]["epsilon"],
-            definition["simulation"]["sigma"]
-        );
+        model = Model::lennardJonesModel(deltaT);
     }
+
+    if(definition["simulation"].contains("thermostat")){
+        size_t dimension = definition["simulation"]["thermostat"]["dimension"];
+
+        thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
+                                definition["simulation"]["thermostat"]["interval"], dimension,
+                                definition["simulation"]["thermostat"]["brownian"]);
+
+        if (definition["simulation"]["thermostat"].contains("target_temperature") &&
+            definition["simulation"]["thermostat"].contains("delta_temperature")) {
+            // target temperature and ∆T are specified
+            // along with initialTemperature, thermostatInterval, numDimensions, initializeWithBrownianMotion
+            thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
+            thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
+
+        } else if (definition["simulation"]["thermostat"].contains("target_temperature") &&
+                   !definition["simulation"]["thermostat"].contains("delta_temperature")) {
+            // ∆T not specified
+            thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
+
+        } else if (!definition["simulation"]["thermostat"].contains("target_temperature") &&
+                   definition["simulation"]["thermostat"].contains("delta_temperature")) {
+            thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
+        } else {
+            // initialTemperature, thermostatInterval, numDimensions,
+            // initializeWithBrownianMotion specified in .json
+            // ∆T = ∞ and targetTemperature = initialTemperature
+
+            thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
+                                    definition["simulation"]["thermostat"]["interval"], dimension,
+                                    definition["simulation"]["thermostat"]["brownian"]);
+        }
+
+    }
+
+
 }
 
-Simulation::Simulation(Model model, double endTime, double deltaT, int videoDuration, int fps, const std::string& in, std::string out, outputWriter::OutputType outputType)
-        : endTime(endTime), deltaT(deltaT), videoDuration(videoDuration), fps(fps), in(in), out(std::move(out)), model(std::move(model)), outputType(outputType) {
+
+Simulation::Simulation(Model model, double endTime, double deltaT, int videoDuration, int fps, const std::string &in,
+                       std::string out, outputWriter::OutputType outputType)
+        : endTime(endTime), deltaT(deltaT), videoDuration(videoDuration), fps(fps), in(in), out(std::move(out)),
+          model(std::move(model)), outputType(outputType), checkpoint(-1) {
 
     FileReader::readFile(*particles, in);
 }
@@ -139,13 +182,29 @@ void Simulation::run() {
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
-    // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
 
-    // Brownian Motion for all particles
-    particles->applyToAll([](Particle &p) {
-        p.setV(p.getV() + maxwellBoltzmannDistributedVelocity(0.1, 3));
-    });
+    auto combinedForce = gravity != 0
+            ? [force, this](Particle &p1, Particle &p2) {
+                force(p1, p2);
+
+                p1.setF(p1.getF() + Model::verticalGravityForce(p1.getM(), gravity));
+                p2.setF(p2.getF() + Model::verticalGravityForce(p2.getM(), gravity));
+            }
+            : force;
+
+    // Calculate initial force to avoid starting with 0 force
+    particles->applyToAllPairsOnce(combinedForce);
+
+    // Brownian Motion with scaling factor
+    if (thermostat.getNumDimensions() != 5 && thermostat.isInitializeWithBrownianMotion()) {
+        thermostat.initializeTemperature(*particles);
+    } else {
+        // Brownian Motion for all particles
+        particles->applyToAll([](Particle &p) {
+            p.setV(p.getV() + maxwellBoltzmannDistributedVelocity(0.1, 3));
+        });
+    }
+
 
     int lastOutput = 0;
 
@@ -153,7 +212,7 @@ void Simulation::run() {
     while (current_time < endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
-        auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer*>(particles.get());
+        auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
 
         if (linkedCellParticleContainer != nullptr) {
             // particles points to a LinkedCellParticleContainer
@@ -164,12 +223,28 @@ void Simulation::run() {
 
         // calculate new f
         particles->applyToAll(resetForce);
-        particles->applyToAllPairsOnce(force);
+
+        particles->applyToAllPairsOnce(combinedForce);
 
         // calculate new v
         particles->applyToAll(velocity);
 
+
         iteration++;
+
+
+
+        if (thermostat.getNumDimensions() != 5 && iteration % thermostat.getThermostatInterval() == 0) {
+            thermostat.scaleVelocities(*particles);
+        }
+
+
+        if (checkpoint > 0 && iteration == checkpoint) {
+            spdlog::info("Checkpoint reached. Saving simulation to file.");
+            JSONWriter::writeFile(particles->json(), out + "/checkpoint.cp.json");
+            spdlog::info("Simulation saved.");
+            break;
+        }
 
         if (iteration % plotInterval == 0) {
             plotParticles(iteration);
@@ -177,7 +252,8 @@ void Simulation::run() {
 
         double percentage = current_time / endTime * 100;
 
-        std::cout << std::fixed << std::setprecision(2) <<"Running simulation: [ " <<current_time / endTime * 100 << "% ] "  << "\r" << std::flush;
+        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time / endTime * 100
+                  << "% ] " << "\r" << std::flush;
 
         current_time += deltaT;
     }
@@ -189,7 +265,7 @@ void Simulation::plotParticles(int iteration) {
     outputWriter::VTKWriter vtkWriter{};
     outputWriter::XYZWriter xyzWriter{};
 
-    outputWriter::Writer* writer = &vtkWriter;
+    outputWriter::Writer *writer = &vtkWriter;
 
     switch (outputType) {
         case outputWriter::VTK: {
@@ -218,6 +294,7 @@ std::string Simulation::toString() const {
     stream << "\n====== Simulation ======"
         << "\nEnd time: " << endTime
         << "\nTime delta: " << deltaT
+        << "\nGravity: " << gravity
         << "\nVideo duration (s): " << videoDuration
         << "\nFrames per second: " << fps
         << "\n"
@@ -226,7 +303,7 @@ std::string Simulation::toString() const {
         << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
         << "\n" << particles->toString()
         << "\n========================\n";
-
+  
     return stream.str();
 }
 

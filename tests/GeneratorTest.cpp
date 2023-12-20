@@ -30,7 +30,7 @@ protected:
 TEST_F(GeneratorTest, BasicCuboidTest) {
     spdlog::info("Starting CuboidTest");
 
-    Generator::cuboid(particleContainer, {0.0, 0.0, 0.0}, {2, 2, 2}, 1.0, {1.0, 1.0, 1.0}, 1.0, 1);
+    Generator::cuboid(particleContainer, {0.0, 0.0, 0.0}, {2, 2, 2}, 1.0, {1.0, 1.0, 1.0}, 1.0, 1, 5, 1);
 
     EXPECT_EQ(particleContainer.size(), 2 * 2 * 2);
 
@@ -53,7 +53,7 @@ TEST_F(GeneratorTest, RandomizedCuboidTest) {
     std::array<int, 3> size = {intDist(gen), intDist(gen), intDist(gen)};
 
 
-    Generator::cuboid(particleContainer, {0.0, 0.0, 0.0}, {size[0], size[1], size[2]}, 1.5, {1.0, 1.0, 1.0}, 1.0, 1);
+    Generator::cuboid(particleContainer, {0.0, 0.0, 0.0}, {size[0], size[1], size[2]}, 1.5, {1.0, 1.0, 1.0}, 1.0, 1, 5, 1);
     int expectedSize = (size[0] * size[1] * size[2]);
 
     EXPECT_TRUE(particleContainer.size() == expectedSize);
@@ -71,7 +71,7 @@ TEST_F(GeneratorTest, BasicSphereSizeTest) {
     spdlog::info("Starting BasicSphereSizeTest");
 
     for (int radius = 1; radius <= 5; ++radius) {
-        Generator::sphere(particleContainer, {0.0, 0.0, 0.0}, radius, 1, {1.2, 2.0, 0.0}, 1.0, 2);
+        Generator::sphere(particleContainer, {0.0, 0.0, 0.0}, radius, 1, {1.2, 2.0, 0.0}, 1.0, 2, 5, 1);
         double maxAmount = pow(2 * radius, 3);
         double actualAmount = particleContainer.size();
 
@@ -91,7 +91,7 @@ TEST_F(GeneratorTest, SphereSizeVariantMeshTest) {
 
     for (double meshWidth: {1.0, 1.5, 3.5, 2.2}) {
         int radius = 5;
-        Generator::sphere(particleContainer, {9.35, 0.5, 2.0}, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2);
+        Generator::sphere(particleContainer, {9.35, 0.5, 2.0}, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2, 5, 1);
 
         double maxAmount = pow(2 * radius * meshWidth, 3);
         double actualAmount = particleContainer.size();
@@ -112,7 +112,7 @@ TEST_F(GeneratorTest, ExactSphereSizeTest) {
     spdlog::info("Starting ExactSphereSizeTest");
 
     //Source for comparison: https://challenges.wolframcloud.com/challenge/lattice-points-in-a-sphere
-    Generator::sphere(particleContainer, {0.0, 0.0, 0.0}, 9, 0.5, {1.2, 2.0, 0.0}, 1.0, 2);
+    Generator::sphere(particleContainer, {0.0, 0.0, 0.0}, 9, 0.5, {1.2, 2.0, 0.0}, 1.0, 2, 5, 1);
     EXPECT_EQ(particleContainer.size(), 3071);
 
     cuboidParticles = particleContainer.getParticles();
@@ -130,7 +130,7 @@ TEST_F(GeneratorTest, SphereGeneralPositionTest) {
     int radius = 5;
     double meshWidth = 1.0;
     std::array<double, 3> center = {0.0, 0.0, 0.0};
-    Generator::sphere(particleContainer, center, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2);
+    Generator::sphere(particleContainer, center, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2, 5, 1);
 
     cuboidParticles = particleContainer.getParticles();
 
@@ -156,7 +156,7 @@ TEST_F(GeneratorTest, SphereExactPositionTest) {
     int radius = 1;
     double meshWidth = 1.0;
     std::array<double, 3> center = {0.0, 0.0, 0.0};
-    Generator::sphere(particleContainer, center, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2);
+    Generator::sphere(particleContainer, center, radius, meshWidth, {1.2, 2.0, 0.0}, 1.0, 2, 5, 1);
 
     cuboidParticles = particleContainer.getParticles();
 
@@ -201,7 +201,7 @@ TEST_F(GeneratorTest, DiskGeneralPositionTest) {
     double mass = 1.0;
     int typeId = 3;
 
-    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId);
+    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId, 5, 1);
 
     cuboidParticles = particleContainer.getParticles();
     for (const Particle &particle : cuboidParticles) {
@@ -228,7 +228,7 @@ TEST_F(GeneratorTest, DiskSize5Test) {
     double mass = 1.0;
     int typeId = 3;
 
-    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId);
+    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId, 5, 1);
 
     double upperBound = M_PI * radius * radius + 2 * sqrt(2) * M_PI * radius;
     EXPECT_LE(particleContainer.size(), upperBound);
@@ -250,7 +250,7 @@ TEST_F(GeneratorTest, DiskSize14Test) {
     double mass = 1.0;
     int typeId = 3;
 
-    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId);
+    Generator::disk(particleContainer, center, radius, meshWidth, velocity, mass, typeId, 5, 1);
 
     double upperBound = M_PI * radius * radius + 2 * sqrt(2) * M_PI * radius;
     EXPECT_LE(particleContainer.size(), upperBound);

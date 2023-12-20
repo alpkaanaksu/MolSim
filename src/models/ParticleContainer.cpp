@@ -6,6 +6,12 @@
 #include "ParticleContainer.h"
 
 #include "utils/Generator.h"
+#include "io/reader/JSONReader.h"
+
+#include <spdlog/spdlog.h>
+
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 
 ParticleContainer::ParticleContainer() {
     particles = std::vector<Particle>();
@@ -44,21 +50,53 @@ void ParticleContainer::add(const Particle &particle) {
     particles.push_back(particle);
 }
 
-void ParticleContainer::add(const json &objects) {
+void ParticleContainer::add(const nlohmann::json &objects) {
     for (auto &object: objects) {
         if (object["type"] == "particle") {
-            add(Particle{object["position"], object["velocity"], object["mass"], object["type_id"]});
+            std::array<double, 3> f = {0., 0., 0.};
+            std::array<double, 3> old_f = {0., 0., 0.};
+
+            if (object.contains("f")) {
+                f = object["f"];
+            }
+
+            if (object.contains("old_f")) {
+                old_f = object["old_f"];
+            }
+
+            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"]});
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "sphere") {
             Generator::sphere(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "disk") {
             Generator::disk(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+        } else if (object["type"] == "checkpoint") {
+            resolveCheckpoint(object["path"]);
         }
     }
+}
+
+void ParticleContainer::resolveCheckpoint(const std::string &path) {
+    // Get the absolute path for source
+    fs::path absolutePath = fs::absolute(source);
+
+    // Append the referencedFile to the directory of path
+    fs::path resolvedPath = absolutePath.parent_path() / path;
+
+    // Check if the resolved path exists
+    if (fs::exists(resolvedPath)) {
+        spdlog::info("Resolved path for " + path + ": " + resolvedPath.string());
+    } else {
+        spdlog::error("File " + path + " does not exist relative to " + source);
+        exit(-1);
+    }
+
+    auto j = JSONReader::readFile(resolvedPath.string());
+    add(j);
 }
 
 int ParticleContainer::size() {
@@ -86,6 +124,23 @@ std::string ParticleContainer::toString() {
            << "\n------------------------\n";
 
     return stream.str();
+}
+
+nlohmann::ordered_json ParticleContainer::json() {
+    nlohmann::ordered_json j;
+   for (auto &p : particles) {
+         j.push_back(p.json());
+    }
+
+   return j;
+}
+
+void ParticleContainer::setSource(const std::string src) {
+    this->source = src;
+}
+
+std::string ParticleContainer::getSource() {
+    return this->source;
 }
 
 std::ostream &operator<<(std::ostream &stream, ParticleContainer &simulation) {

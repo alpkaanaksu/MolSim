@@ -15,8 +15,7 @@
     "frame_rate": 24,
     "output_type": "vtk",
     "output_path": "output",
-    "sigma": 1,
-    "epsilon": 5
+    "gravity": 0
   },
   "objects": [
     {
@@ -26,7 +25,17 @@
       "velocity": [7, 0, 0],
       "size": [5, 5, 1],
       "mesh_width": 1.1225,
-      "mass": 1
+      "mass": 1,
+      "sigma": 1,
+      "epsilon": 5
     }
   ]
 }
+
+
+
+
+
+
+
+

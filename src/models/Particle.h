@@ -9,6 +9,7 @@
 
 #include <array>
 #include <string>
+#include <nlohmann/json.hpp>
 
 /**
  * Particle class
@@ -48,6 +49,10 @@ private:
    */
   int type;
 
+  double epsilon;
+
+  double sigma;
+
 public:
   explicit Particle(int type = 0);
 
@@ -56,8 +61,14 @@ public:
   Particle(
       // for visualization, we need always 3 coordinates
       // -> in case of 2d, we use only the first and the second
-      std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg,
+      std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
       int type = 0);
+
+    Particle(
+            // for visualization, we need always 3 coordinates
+            // -> in case of 2d, we use only the first and the second
+            std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig,
+            int type = 0);
 
   virtual ~Particle();
 
@@ -75,7 +86,15 @@ public:
 
   bool operator==(Particle &other);
 
-  std::string toString() const;
+  double getSigma() const;
+
+  double getEpsilon() const;
+
+  void setEpsilon(double eps);
+
+  void setSigma(double sig);
+
+std::string toString() const;
 
   /**
    * @brief Calculates the distance between the current particle and another one
@@ -109,6 +128,13 @@ void setType(int type_arg);
  * @param f_arg
  */
 void updateF(const std::array<double, 3> &f_arg);
+
+/**
+ * @brief Returns a json representation of the particle
+ *
+ * @return nlohmann::json object representing a particle
+ */
+nlohmann::ordered_json json();
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
