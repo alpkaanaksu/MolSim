@@ -7,6 +7,7 @@
 #include "string"
 #include "functional"
 #include "models/Model.h"
+#include "utils/Thermostat.h"
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
@@ -28,6 +29,8 @@ private:
     Model model;
     outputWriter::OutputType outputType;
     int checkpoint;
+    Thermostat thermostat;
+
 
 public:
     /**
@@ -97,4 +100,3 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation);
-
