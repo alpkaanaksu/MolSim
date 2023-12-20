@@ -413,6 +413,7 @@ void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, d
     }
 }*/
 
+//Final alternative is this:
 /*void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
     std::array<double, 3> position = particle.getX();
     std::array<double, 3> velocity = particle.getV();
@@ -465,7 +466,7 @@ void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
     reflectIfNecessaryOnAxis(particle,  0, xSize, 0);
     reflectIfNecessaryOnAxis(particle, 0, ySize, 1);
     reflectIfNecessaryOnAxis(particle,  0, zSize, 2);
-}
+}*/
 
 nlohmann::ordered_json LinkedCellParticleContainer::json() {
     nlohmann::ordered_json j;
@@ -479,7 +480,7 @@ nlohmann::ordered_json LinkedCellParticleContainer::json() {
     }
 
     return j;
-}*/
+}
 
 std::string LinkedCellParticleContainer::toString() {
     std::stringstream stream;
