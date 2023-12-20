@@ -10,8 +10,8 @@
         "bottom": "outflow",
         "right": "outflow",
         "left": "outflow",
-        "front": "reflective",
-        "back": "outflow"
+        "front": "outflow",
+        "back": "reflective"
       }
     },
     "end_time": 2,
