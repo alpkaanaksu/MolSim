@@ -167,13 +167,13 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
 
                     if (x == 0 && y == 0 && z == 0) continue;
 
-                    auto &currentCell = cells[index3dTo1d(neighborX, neighborY,
-                                                          neighborZ)];  // Extract vector from the pair
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
 
                     for (auto &p1: firstCell) {
                         for (auto &p2: currentCell) {
                             // Check if the pair has been processed before by comparing memory addresses
-                            if (&p1 < &p2) {
+                            if (&p1 < &p2 || !isHaloCellVector[neighborIndex]) {
                                 function(p1, p2);
                             }
                         }
