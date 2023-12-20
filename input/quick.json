@@ -13,7 +13,9 @@
       "dimensions": [63, 36, 2.5],
       "cutoff_radius": 2.5,
       "boundary": {
-        "all": "reflective"
+        "all": "reflective",
+        "left": "periodic",
+        "right": "periodic"
       }
     },
     "end_time": 25,
