@@ -99,15 +99,9 @@ void VTKWriter::plotParticle(Particle &p) {
 }
 
 void VTKWriter::plotParticles(ParticleContainer &particles, const std::string &filename, int iteration) {
-    int s = 0;
+    initializeOutput(particles.size());
 
-    particles.applyToAllHalo([&](Particle &p) {
-        s++;
-    });
-
-    initializeOutput(s);
-
-    particles.applyToAllHalo([&](Particle &p) {
+    particles.applyToAll([&](Particle &p) {
         plotParticle(p);
     });
 
