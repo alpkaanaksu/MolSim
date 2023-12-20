@@ -277,10 +277,8 @@ void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
 
     for (auto it = cell.begin(); it != cell.end();) {
 
-        if(isHaloCellVector[cellIndex]) {
-            vectorReverseReflection(*it);
-            handlePeriodicBoundary(*it);
-        }
+        vectorReverseReflection(*it);
+        handlePeriodicBoundary(*it);
 
         int newCellIndex = cellIndexForParticle(*it);
 
