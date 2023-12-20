@@ -6,7 +6,7 @@
       "dimensions": [15, 15, 15],
       "cutoff_radius": 3,
       "boundary": {
-        "all": "reflective"
+        "all": "periodic"
       }
     },
     "end_time": 2,

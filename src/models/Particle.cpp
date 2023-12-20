@@ -97,6 +97,8 @@ double Particle::getM() const { return m; }
 
 int Particle::getType() const { return type; }
 
+void Particle::setType(int type_arg) { type = type_arg; }
+
 std::string Particle::toString() const {
     std::stringstream stream;
     stream << "Particle: X:" << x << " v: " << v << " f: " << f

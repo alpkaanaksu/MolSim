@@ -147,3 +147,7 @@ std::ostream &operator<<(std::ostream &stream, ParticleContainer &simulation) {
     stream << simulation.toString();
     return stream;
 }
+
+void ParticleContainer::applyToAllHalo(const std::function<void(Particle &)> &function) {
+    applyToAll(function);
+}

@@ -270,6 +270,21 @@ public:
 
     BoundaryBehavior getBoundaryBehaviorBack() const;
 
+
+    double updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex);
+
+    double updatePositionOnLowerPeriodic(const double axisPosition, int axisIndex);
+
+    void handlePeriodicBoundary(Particle &particle);
+
+    void lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex);
+
+    void upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex);
+
+    void updateHaloCells();
+
+    void applyToAllHalo(const std::function<void(Particle &)> &function);
+
     void revertParticleVelocity(Particle &particle, int axisIndex);
 
     std::array<double, 3>
