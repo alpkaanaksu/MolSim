@@ -6,11 +6,11 @@
       "dimensions": [63, 36, 2.5],
       "cutoff_radius": 2.5,
       "boundary": {
-        "all": "outflow"
+        "all": "reflective"
       }
     },
     "end_time": 25,
-    "time_delta": 0.0005,
+    "time_delta": 0.00001,
     "video_duration": 40,
     "frame_rate": 24,
     "output_type": "vtk",
