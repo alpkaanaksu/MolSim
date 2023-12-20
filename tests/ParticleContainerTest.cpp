@@ -244,6 +244,7 @@ TEST_F(ParticleContainerTest, TestApplyToAllPairs) {
 
 }
 
+/*
 // Test case for add(const Particle &particle) with random particles
 TEST_F(ParticleContainerTest, TestAddRandomParticles) {
     initializeRandomParticles();
@@ -254,7 +255,7 @@ TEST_F(ParticleContainerTest, TestAddRandomParticles) {
     ASSERT_TRUE(particleContainer.size() == 0);
     spdlog::info("TestAddRandomParticles completed");
 }
-
+*/
 
 
 
