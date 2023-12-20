@@ -21,9 +21,9 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
                                                          BoundaryBehavior boundaryBehaviorBack)
         :
         xSize(xSize), ySize(ySize), zSize(zSize),
-        xCells(static_cast<int>(std::floor(xSize / cutoffRadius))),
-        yCells(static_cast<int>(std::floor(ySize / cutoffRadius))),
-        zCells(static_cast<int>(std::floor(zSize / cutoffRadius))),
+        xCells(static_cast<int>(xSize >= cutoffRadius ? std::floor(xSize / cutoffRadius)  : 1)),
+        yCells(static_cast<int>(ySize >= cutoffRadius ? std::floor(ySize / cutoffRadius)  : 1)),
+        zCells(static_cast<int>(zSize >= cutoffRadius ? std::floor(zSize / cutoffRadius)  : 1)),
         cutoffRadius(cutoffRadius),
         deltaT(deltaT), boundaryBehaviorTop(boundaryBehaviorTop),
         boundaryBehaviorBottom(boundaryBehaviorBottom), boundaryBehaviorRight(boundaryBehaviorRight),

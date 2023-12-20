@@ -1,16 +1,9 @@
 {
   "simulation": {
     "model": "lennard_jones",
-    "thermostat": {
-      "dimension": 2,
-      "initial_temperature": 40,
-      "interval": 1000,
-      "target_temperature": 40,
-      "brownian": false
-    },
     "particle_container": {
       "type": "linked_cell",
-      "dimensions": [63, 36, 2.5],
+      "dimensions": [63, 36, 1],
       "cutoff_radius": 2.5,
       "boundary": {
         "all": "reflective",
@@ -30,7 +23,7 @@
     {
       "type": "cuboid",
       "type_id": 1,
-      "position": [0.6, 2, 1],
+      "position": [0.6, 2, 0.5],
       "velocity": [0, 0, 0],
       "size": [50, 14, 1],
       "mesh_width": 1.2,
@@ -41,7 +34,7 @@
     {
       "type": "cuboid",
       "type_id": 2,
-      "position": [0.6, 19, 1],
+      "position": [0.6, 19, 0.5],
       "velocity": [0, 0, 0],
       "size": [50, 14, 1],
       "mesh_width": 1.2,
