@@ -300,6 +300,58 @@ int LinkedCellParticleContainer::size() {
     return size;
 }
 
+std::array<double, 3> LinkedCellParticleContainer::updateVelocityOnReflection(const std::array<double, 3> velocity, int axisIndex) {
+    std::array<double, 3> updatedVelocity = {velocity[0], velocity[1], velocity[2]};
+    updatedVelocity[axisIndex] = -velocity[axisIndex];
+    return updatedVelocity;
+}
+std::array<double, 3> LinkedCellParticleContainer::updatePositionOnReflection(const std::array<double, 3>& position, int axisIndex, double boundary) {
+    std::array<double, 3> updatedPosition = {position[0], position[1], position[2]};
+    updatedPosition[axisIndex] = 2 * boundary - position[axisIndex];
+    return updatedPosition;
+}
+bool LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
+    if (axisIndex == 0 && boundaryBehaviorRight == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else if (axisIndex == 0 && boundaryBehaviorLeft == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else if (axisIndex == 1 && boundaryBehaviorTop == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else if (axisIndex == 1 && boundaryBehaviorBottom == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else if (axisIndex == 2 && boundaryBehaviorFront == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else if (axisIndex == 2 && boundaryBehaviorBack == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
+        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
+        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
+        return true;
+    } else {
+        return false;
+    }
+}
+void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
+    bool reflected = false;
+    while(true) {
+        reflected = false;
+        reflected = reflectIfNecessaryOnAxis(particle,  0, xSize, 0);
+        reflected = reflected || reflectIfNecessaryOnAxis(particle, 0, ySize, 1);
+        reflected = reflected || reflectIfNecessaryOnAxis(particle,  0, zSize, 2);
+        if (!reflected) {
+            break;
+        }
+    }
+}
+
 /*
 
 std::array<double, 3> LinkedCellParticleContainer::updateVelocityOnReflection(const std::array<double, 3> velocity, int axisIndex) {
@@ -361,7 +413,7 @@ void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, d
     }
 }*/
 
-void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
+/*void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
     std::array<double, 3> position = particle.getX();
     std::array<double, 3> velocity = particle.getV();
 
@@ -389,11 +441,11 @@ void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, d
                 reflected = true;
             }
         } else if (axisIndex == 2) {
-            if (boundaryBehaviorBack == BoundaryBehavior::Reflective && position[2] > axisMax) {
+            if (boundaryBehaviorFront == BoundaryBehavior::Reflective && position[2] > axisMax) {
                 position[2] = 2 * axisMax - position[2];
                 velocity[2] = -velocity[2];
                 reflected = true;
-            } else if (boundaryBehaviorFront == BoundaryBehavior::Reflective && position[2] < axisMin) {
+            } else if (boundaryBehaviorBack == BoundaryBehavior::Reflective && position[2] < axisMin) {
                 position[2] = 2 * axisMin - position[2];
                 velocity[2] = -velocity[2];
                 reflected = true;
@@ -427,7 +479,7 @@ nlohmann::ordered_json LinkedCellParticleContainer::json() {
     }
 
     return j;
-}
+}*/
 
 std::string LinkedCellParticleContainer::toString() {
     std::stringstream stream;

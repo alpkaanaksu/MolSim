@@ -220,7 +220,9 @@ public:
      * @param axisIndex
      * @return true if reflected, else false
      */
-    void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
+    //void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
+
+    bool reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
     nlohmann::ordered_json json();
 
