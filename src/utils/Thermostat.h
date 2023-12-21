@@ -14,14 +14,14 @@ private:
     double targetTemperature;
     double maxTemperatureChange;
     size_t thermostatInterval;
-    size_t numDimensions;
+    int numDimensions;
     bool initializeWithBrownianMotion;
 
 public:
     Thermostat();
 
     // Minimum requirement for the thermostat, ∆T = ∞ and targetTemperature = initialTemperature
-    Thermostat(double initialTemperature, size_t thermostatInterval, size_t numDimensions,
+    Thermostat(double initialTemperature, size_t thermostatInterval, int numDimensions,
                bool initializeWithBrownianMotion);
 
     void initializeTemperature(ParticleContainer &particleContainer);
@@ -31,10 +31,6 @@ public:
 
     // Function to get the current temperature
     double getCurrentTemperature(ParticleContainer &particleContainer);
-
-    // Function to calculate kinetic energy
-    double calculateKineticEnergy(ParticleContainer &particleContainer);
-
 
     double getInitialTemperature() const;
 

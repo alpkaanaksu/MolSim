@@ -106,8 +106,8 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
     in = filepath;
     outputType = outputWriter::stringToOutputType(definition["simulation"]["output_type"]);
     gravity = definition["simulation"].contains("gravity")
-            ? (double) definition["simulation"]["gravity"]
-            : 0.0;
+              ? (double) definition["simulation"]["gravity"]
+              : 0.0;
 
     particles->add(definition["objects"]);
 
@@ -117,40 +117,36 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
         model = Model::lennardJonesModel(deltaT);
     }
 
-    if(definition["simulation"].contains("thermostat")){
-        size_t dimension = definition["simulation"]["thermostat"]["dimension"];
-
+    if (definition["simulation"].contains("thermostat")) {
         thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
-                                definition["simulation"]["thermostat"]["interval"], dimension,
+                                definition["simulation"]["thermostat"]["interval"],
+                                definition["simulation"]["thermostat"]["dimension"],
                                 definition["simulation"]["thermostat"]["brownian"]);
 
         if (definition["simulation"]["thermostat"].contains("target_temperature") &&
             definition["simulation"]["thermostat"].contains("delta_temperature")) {
-            // target temperature and ∆T are specified
-            // along with initialTemperature, thermostatInterval, numDimensions, initializeWithBrownianMotion
+            // Target temperature and ∆T are specified
             thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
             thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
 
         } else if (definition["simulation"]["thermostat"].contains("target_temperature") &&
                    !definition["simulation"]["thermostat"].contains("delta_temperature")) {
-            // ∆T not specified
+            // Target temperature specified and ∆T not
             thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
 
         } else if (!definition["simulation"]["thermostat"].contains("target_temperature") &&
                    definition["simulation"]["thermostat"].contains("delta_temperature")) {
+            // ∆T specified and target temperature not
             thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
         } else {
-            // initialTemperature, thermostatInterval, numDimensions,
-            // initializeWithBrownianMotion specified in .json
-            // ∆T = ∞ and targetTemperature = initialTemperature
-
+            // ∆T = ∞ and targetTemperature = initialTemperature per default
             thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
-                                    definition["simulation"]["thermostat"]["interval"], dimension,
+                                    definition["simulation"]["thermostat"]["interval"],
+                                    definition["simulation"]["thermostat"]["dimension"],
                                     definition["simulation"]["thermostat"]["brownian"]);
         }
 
     }
-
 
 }
 
@@ -186,7 +182,7 @@ void Simulation::run() {
     particles->applyToAllPairsOnce(force);
 
     // Brownian Motion with scaling factor
-    if (thermostat.getNumDimensions() != 5 && thermostat.isInitializeWithBrownianMotion()) {
+    if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
         thermostat.initializeTemperature(*particles);
     } else {
         // Brownian Motion for all particles
@@ -226,7 +222,7 @@ void Simulation::run() {
 
         iteration++;
 
-        if (thermostat.getNumDimensions() != 5 && iteration % thermostat.getThermostatInterval() == 0) {
+        if (thermostat.getNumDimensions() != -1 && iteration % thermostat.getThermostatInterval() == 0) {
             thermostat.scaleVelocities(*particles);
         }
 
@@ -284,18 +280,18 @@ void Simulation::plotParticles(int iteration) {
 std::string Simulation::toString() const {
     std::stringstream stream;
     stream << "\n====== Simulation ======"
-        << "\nEnd time: " << endTime
-        << "\nTime delta: " << deltaT
-        << "\nGravity: " << gravity
-        << "\nVideo duration (s): " << videoDuration
-        << "\nFrames per second: " << fps
-        << "\n"
-        << "\nReading from: " << in
-        << "\nOutput to: " << out << '/'
-        << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
-        << "\n" << particles->toString()
-        << "\n========================\n";
-  
+           << "\nEnd time: " << endTime
+           << "\nTime delta: " << deltaT
+           << "\nGravity: " << gravity
+           << "\nVideo duration (s): " << videoDuration
+           << "\nFrames per second: " << fps
+           << "\n"
+           << "\nReading from: " << in
+           << "\nOutput to: " << out << '/'
+           << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
+           << "\n" << particles->toString()
+           << "\n========================\n";
+
     return stream.str();
 }
 

@@ -6,16 +6,15 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
-// maxTemperatureChange set to default value zero makes sure that the scaling factor stays one
-// and the thermostat is not applied, if it wasn't initialized correctly
+// Thermostat is not applied, if it wasn't initialized correctly, this is done by checking the value of numDimensions
 Thermostat::Thermostat() : targetTemperature(0.0),
                            maxTemperatureChange(0.0),
                            thermostatInterval(0),
-                           numDimensions(5),
+                           numDimensions(-1),
                            initializeWithBrownianMotion(false) {
 }
 
-Thermostat::Thermostat(double initialTemperature, size_t thermostatInterval, size_t numDimensions,
+Thermostat::Thermostat(double initialTemperature, size_t thermostatInterval, int numDimensions,
                        bool initializeWithBrownianMotion)
         : initialTemperature(initialTemperature),
           targetTemperature(initialTemperature),
@@ -57,7 +56,6 @@ double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) {
         kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
     });
 
-
     // We assume everything to be dimensionless, therefore kB = 1.
     return 2 * kineticEnergy / (particleContainer.size() * numDimensions);
 }
@@ -72,7 +70,6 @@ void Thermostat::initializeTemperature(ParticleContainer &particleContainer) {
     });
 
 }
-
 
 double Thermostat::getInitialTemperature() const {
     return initialTemperature;
