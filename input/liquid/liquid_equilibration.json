@@ -1,0 +1,41 @@
+{
+  "simulation": {
+    "model": "lennard_jones",
+    "thermostat": {
+      "initial_temperature": 0.5,
+      "interval": 1000,
+      "target_temperature": 0.5,
+      "dimension": 2,
+      "brownian": true
+    },
+    "particle_container": {
+      "type": "linked_cell",
+      "dimensions": [303, 180, 1],
+      "cutoff_radius": 3,
+      "boundary": {
+        "all": "reflective"
+      }
+    },
+    "end_time": 15,
+    "checkpoints": [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ],
+    "time_delta": 0.0005,
+    "video_duration": 40,
+    "frame_rate": 24,
+    "output_type": "disabled",
+    "output_path": "output",
+    "gravity": -12.44
+  },
+  "objects": [
+    {
+      "type": "cuboid",
+      "type_id": 1,
+      "position": [1.5, 2, 0.5],
+      "velocity": [0, 0, 0],
+      "size": [250, 50, 1],
+      "mesh_width": 1.2,
+      "mass": 1,
+      "sigma": 1.2,
+      "epsilon": 1
+    }
+  ]
+}

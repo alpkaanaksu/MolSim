@@ -15,14 +15,13 @@
 #include "io/outputWriter/XYZWriter.h"
 #include "utils/MaxwellBoltzmannDistribution.h"
 #include <spdlog/spdlog.h>
+#include <chrono>
 
 #include "models/LinkedCellParticleContainer.h"
 
 using json = nlohmann::json;
 
-Simulation::Simulation(const std::string &filepath) : Simulation(filepath, -1) {}
-
-Simulation::Simulation(const std::string &filepath, const int checkpoint) : checkpoint(checkpoint) {
+Simulation::Simulation(const std::string &filepath) {
     json definition = JSONReader::readFile(filepath);
 
     if (definition["simulation"]["particle_container"]["type"] == "basic") {
@@ -148,13 +147,19 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
 
     }
 
-}
+    if(definition["simulation"].contains("checkpoints")){
+        for(auto &checkpoint : definition["simulation"]["checkpoints"]){
+            checkpoints.push(checkpoint);
+        }
+    }
 
+    checkpoints.push(-1);
+}
 
 Simulation::Simulation(Model model, double endTime, double deltaT, int videoDuration, int fps, const std::string &in,
                        std::string out, outputWriter::OutputType outputType)
         : endTime(endTime), deltaT(deltaT), videoDuration(videoDuration), fps(fps), in(in), out(std::move(out)),
-          model(std::move(model)), outputType(outputType), checkpoint(-1) {
+          model(std::move(model)), outputType(outputType) {
 
     FileReader::readFile(*particles, in);
 }
@@ -186,10 +191,15 @@ void Simulation::run() {
         thermostat.initializeTemperature(*particles);
     }
 
-    int lastOutput = 0;
+    double nextCheckpoint = checkpoints.front();
+    checkpoints.pop();
+
+    auto before = std::chrono::high_resolution_clock::now();
+
+    long numberOfUpdates { 0 };
 
     // for this loop, we assume: current x, current f and current v are known
-    while (current_time < endTime) {
+    while (current_time <= endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
         auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
@@ -202,17 +212,18 @@ void Simulation::run() {
         }
 
         // calculate new f
-        particles->applyToAll(resetForce);
+        particles->applyToAll([&resetForce, this, &numberOfUpdates](Particle &p) {
+            resetForce(p);
+            p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+            numberOfUpdates++;
+        });
 
         particles->applyToAllPairsOnce(force);
 
-        particles->applyToAll([this](Particle &p) {
-            p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
-        });
-
         // calculate new v
-        particles->applyToAll(velocity);
-
+        particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
+            velocity(p);
+        });
 
         iteration++;
 
@@ -221,11 +232,16 @@ void Simulation::run() {
         }
 
 
-        if (checkpoint > 0 && iteration == checkpoint) {
-            spdlog::info("Checkpoint reached. Saving simulation to file.");
-            JSONWriter::writeFile(particles->json(), out + "/checkpoint.cp.json");
+        if (nextCheckpoint != -1 && current_time >= nextCheckpoint) {
+            std::ostringstream oss;
+            oss << std::setprecision(2) <<  nextCheckpoint;
+            std::string checkpointStr = oss.str();
+
+            spdlog::info("Checkpoint " + checkpointStr + " reached. Saving simulation to file.");
+            JSONWriter::writeFile(particles->json(), out + "/checkpoint_" + checkpointStr + ".cp.json");
             spdlog::info("Simulation saved.");
-            break;
+            nextCheckpoint = checkpoints.front();
+            checkpoints.pop();
         }
 
         if (iteration % plotInterval == 0) {
@@ -240,7 +256,24 @@ void Simulation::run() {
         current_time += deltaT;
     }
 
-    spdlog::info("Running simulation: [ 100% ] Done.");
+    auto after = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before);
+
+    std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(duration);
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration - sec);
+
+    spdlog::info("Running simulation: [ 100% ] Done.\n");
+
+    spdlog::info("Saving end state of the simulation to file.\n");
+    JSONWriter::writeFile(particles->json(), out + "/checkpoint_end.cp.json");
+
+    // MUP/s
+    double seconds = duration.count() / 1e6;
+    double updatesPerSecond = numberOfUpdates / seconds;
+
+    spdlog::info("Time: " + std::to_string(sec.count()) + "." + std::to_string(ms.count()));
+    spdlog::info("MUP/s: " + std::to_string(updatesPerSecond));
 }
 
 void Simulation::plotParticles(int iteration) {
