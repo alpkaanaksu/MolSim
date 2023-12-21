@@ -184,41 +184,6 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     }
 }
 
-/*void LinkedCellParticleContainer::counterParticleReflection(Particle &particle, int cellIndex, const std::function<void(Particle&, Particle&)>& function) {
-    std::array<int, 3> cellCoords = index1dTo3d(cellIndex);
-    std::array<double, 3> particleCoords = particle.getX();
-
-    if (cellCoords[0] == 1) {
-        particleCoords[0] = -particleCoords[0];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[0] == xCells - 2) {
-        particleCoords[0] = 2 * xSize - particleCoords[0];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-
-    if(cellCoords[1] == 1) {
-        particleCoords[1] = -particleCoords[1];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[1] == yCells - 2) {
-        particleCoords[1] = 2 * ySize - particleCoords[1];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-
-    if(cellCoords[2] == 1) {
-        particleCoords[2] = -particleCoords[2];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[2] == zCells - 2) {
-        particleCoords[2] = 2 * zSize - particleCoords[2];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(),particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-}*/
-
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
@@ -408,8 +373,6 @@ void LinkedCellParticleContainer::lowerBoundaryToUpperHaloOneAxis(int boundaryCe
     }
 }
 
-
-//Final alternative is this:
 void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
     std::array<double, 3> position = particle.getX();
     std::array<double, 3> velocity = particle.getV();
