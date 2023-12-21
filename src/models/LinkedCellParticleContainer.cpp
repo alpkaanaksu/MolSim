@@ -173,7 +173,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
                     for (auto &p1: firstCell) {
                         for (auto &p2: currentCell) {
                             // Check if the pair has been processed before by comparing memory addresses
-                            if (&p1 < &p2 || !isHaloCellVector[neighborIndex]) {
+                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius) {
                                 function(p1, p2);
                             }
                         }
