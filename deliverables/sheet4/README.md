@@ -55,7 +55,15 @@ An online version of the documentation can be found [here](https://alpkaanaksu.g
 
 ## Thermostat
 
-TODO
+When incorporating gravity into our molecular dynamics simulation, it introduces a significant change. The additional force gradually increases the total energy in the system over time. This poses a problem because, in closed systems, total energy should ideally remain constant. Addressing this issue is crucial for maintaining simulation accuracy and adhering to fundamental laws governing energy conservation in physics.
+
+To address the energy deviation problem, we've implemented a practical solution: the Velocity Rescaling Thermostat. This thermostat allows us to scale particle velocities both gradually and directly. Gradual velocity scaling is achieved by periodically calling the scaleVelocities method of the thermostat during the simulation. The scaling factor for scaleVelocities is dynamically determined based on the difference between the current temperature and the target temperature.
+
+It's worth noting that the initialization with Brownian Motion is now optional in our implementation and can be specified as a parameter of the thermostat in the input file.
+
+Our thermostat implementation incorporates a safeguard against division by zero when handling 'invalid' current temperatures concerning the scaling factor, such as zero $\sqrt{\frac{T_{\text{new}}}{T_{\text{current}}}}$ . While our current implementation covers these scenarios, future extensions may include handling negative temperatures.
+
+Looking ahead, we plan to implement Google Mocks for testing the relationship between the run() method of the Simulation and the temperature scaling performed by the thermostat. This could involve checking the expected number of method calls for different inputs, ensuring the robustness of our simulation.
 
 ## Periodic Boundaries
 
