@@ -2,10 +2,10 @@
   "simulation": {
     "model": "lennard_jones",
     "thermostat": {
-      "initial_temperature": 0,
-      "interval": 2,
-      "target_temperature": 25,
-      "dimension": 2,
+      "initial_temperature": 25,
+      "interval": 20,
+      "target_temperature": 0,
+      "dimension": 3,
       "brownian": true
     },
     "particle_container": {
@@ -16,7 +16,7 @@
         "all": "reflective"
       }
     },
-    "end_time": 20,
+    "end_time": 2,
     "time_delta": 0.05,
     "video_duration": 20,
     "frame_rate": 24,

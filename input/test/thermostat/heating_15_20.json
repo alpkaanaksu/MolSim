@@ -20,7 +20,7 @@
     "time_delta": 0.005,
     "video_duration": 20,
     "frame_rate": 24,
-    "output_type": "vtk",
+    "output_type": "disabled",
     "output_path": "output",
     "gravity": 1.0
   },
