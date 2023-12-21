@@ -53,6 +53,8 @@ make doc_doxygen
 
 An online version of the documentation can be found [here](https://alpkaanaksu.github.io/MolSim/).
 
+---
+
 ## Thermostat
 
 When incorporating gravity into our molecular dynamics simulation, it introduces a significant change. The additional force gradually increases the total energy in the system over time. This poses a problem because, in closed systems, total energy should ideally remain constant. Addressing this issue is crucial for maintaining simulation accuracy and adhering to fundamental laws governing energy conservation in physics.
@@ -98,16 +100,52 @@ We made a small change in the `force` function of the `lennardJonesModel` (see `
 
 We implemented the Rayleigh-Taylor instability as described in the exercise sheet. Two cuboids represent the two fluids, one is heavier than the other. The heavier fluid is on top of the lighter one. The simulation starts with a small perturbation in the interface between the two fluids. The heavier fluid starts to fall down and the lighter fluid starts to rise up. The interface between the two fluids becomes more and more unstable and the fluids start to mix.
 
-See ...
+See `rayleigh-taylor-instability.mp4` for the simulation. We also included two simulation of the 'quicker' version of this simulatiom (first part of the task), which shows the difference between running the simulation with and without a thermostat.
 
 ## Checkpointing
 
-TODO
+We save all the particles in a JSON file. This happens automatically after each simulation. But you can also specify times to save chekpoints by adding ,e.g., `"checkpoints": [1, 3, 5]` to the simulation object in a simulation file. In order to include particles from a checkpoint in the simulation, you can add a checkpoint object:
+
+```json
+{
+    "type": "checkpoint",
+    "path": "path/to/checkpoint.cp.json"
+}
+```
+
+The path to the checkpoint file is relative to the location of the simulation file.
 
 ## Falling Drop
 
-TODO
+We first equilibrated the liquid as described in `liquid/liquid_equilibration.json`. `liquid.cp.json` is the checkpoint our program generated at the end of the equilibration process. `liquid_and_drop.json` describes a simulation with a disk and the equilibrated liquid. The equilibrated cuboid really looks like a liquid. We spotted a potential problem in our simulations, where the liquid 'sinks' to the bottom again. This is not what we were expecting. This does not happen if we use a thermostat in the post-equilibration simulation, but this messes up the fall of the drop and the problem statement explicitly states that we should run the simulation without a thermostat.
 
 ## Performance / Profiling
 
-TODO
+We used the `std::chrono` to measure the runtime of the main loop in `Simulation::run()`. We also calculate the MUP/s (molecule updates per second). We print the duration and MUP/s at the end of the simulation.
+
+We used `quick.json` (1400 particles) and `performance/rayleigh-taylor-1000.json` (10000) for inspecting the performacne.
+
+For example, we got the following for `quick.json`:
+
+```txt
+[2023-12-21 21:25:52.718] [info] Time: 65.428
+[2023-12-21 21:25:52.718] [info] MUP/s: 1069898.036477
+```
+
+---
+
+We sadly did not have access to a Linux machine. Our options were using WSL or the Rechnerhalle. Both of them are not so nice to work with. So we searched for profiling tools for macOS. The results should be similar on different machines and different platforms. Apple develops a profiler called *Instruments* that comes with Xcode, which was actually kind of practicle and pleasant to use. We used the time profiler and the CPU profiler our executable. We exported the results to a `.trace` file (we tried pushing it to the repo but it was recognized as a folder consisting of ~1940 files), we are also not sure if you can open it on a Linux machines, so here is a screenshot:
+
+![profile](profile.png)
+
+(*We can send the `.trace` file per email if you need it.*) We will probably use `perf` when we get access to the Linux cluster.
+
+We identified that the costly functions are `applyToAll`, `applyToAllPairsOnce` and the force calculation.
+
+### Attempt for optimization
+
+We decided modifying the iteration approach in the `applyToAllPairs` method. Originally, we looped through all neighbors in the x, y, and z axes, including both positive and negative directions. To optimize this, we decided to iterate only in the positive direction (0 <= 1) for each axis. This change eliminated the need for the check `&p1 < &p2` since the function wouldn't be applied twice to the same pair in this algorithm.
+
+This adjustment theoretically aimed to enhance performance without altering the simulation outcome. We indeed observed an improvement in performance, however the simulation behavior differed significantly for a reason we couldn't find (yet), therefore the profiling results became useless for a simulation with incorrect behavior, that's why we disregarded them.
+
+We also tried summing up several calls to `applyToAll` to a single one (this is the version we hand in), but this did not improve the performance, the results were roughly the same as before (similar runtime, MUP/s and profile).
