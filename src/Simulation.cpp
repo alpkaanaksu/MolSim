@@ -182,18 +182,8 @@ void Simulation::run() {
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
-
-    auto combinedForce = gravity != 0
-            ? [force, this](Particle &p1, Particle &p2) {
-                force(p1, p2);
-
-                p1.setF(p1.getF() + Model::verticalGravityForce(p1.getM(), gravity));
-                p2.setF(p2.getF() + Model::verticalGravityForce(p2.getM(), gravity));
-            }
-            : force;
-
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(combinedForce);
+    particles->applyToAllPairsOnce(force);
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != 5 && thermostat.isInitializeWithBrownianMotion()) {
@@ -224,15 +214,17 @@ void Simulation::run() {
         // calculate new f
         particles->applyToAll(resetForce);
 
-        particles->applyToAllPairsOnce(combinedForce);
+        particles->applyToAllPairsOnce(force);
+
+        particles->applyToAll([this](Particle &p) {
+            p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+        });
 
         // calculate new v
         particles->applyToAll(velocity);
 
 
         iteration++;
-
-
 
         if (thermostat.getNumDimensions() != 5 && iteration % thermostat.getThermostatInterval() == 0) {
             thermostat.scaleVelocities(*particles);

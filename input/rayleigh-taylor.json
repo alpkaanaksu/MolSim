@@ -10,15 +10,15 @@
     },
     "particle_container": {
       "type": "linked_cell",
-      "dimensions": [63, 36, 1],
-      "cutoff_radius": 2.5,
+      "dimensions": [300, 54, 1],
+      "cutoff_radius": 3,
       "boundary": {
         "all": "reflective",
         "left": "periodic",
         "right": "periodic"
       }
     },
-    "end_time": 25,
+    "end_time": 50,
     "time_delta": 0.0005,
     "video_duration": 40,
     "frame_rate": 24,
@@ -32,21 +32,21 @@
       "type_id": 1,
       "position": [0.6, 2, 0.5],
       "velocity": [0, 0, 0],
-      "size": [50, 14, 1],
+      "size": [250, 20, 1],
       "mesh_width": 1.2,
       "mass": 1,
-      "sigma": 1,
+      "sigma": 1.2,
       "epsilon": 1
     },
     {
       "type": "cuboid",
       "type_id": 2,
-      "position": [0.6, 19, 0.5],
+      "position": [0.6, 27, 0.5],
       "velocity": [0, 0, 0],
-      "size": [50, 14, 1],
+      "size": [250, 20, 1],
       "mesh_width": 1.2,
       "mass": 2,
-      "sigma": 0.9412,
+      "sigma": 1.1,
       "epsilon": 1
     }
   ]
