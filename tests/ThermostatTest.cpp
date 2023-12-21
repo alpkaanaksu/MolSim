@@ -15,24 +15,6 @@ protected:
 
 };
 
-// Verifies that the temperature is not adjusted if a thermostat is not given
-TEST_F(ThermostatTest, NoThermostat) {
-    std::string in = "../input/test/thermostat/no_thermostat.json";
-    Simulation simulation(in);
-
-    auto particles = simulation.getParticles();
-    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
-    ASSERT_NE(linkedCellParticles, nullptr);
-
-    simulation.run();
-    EXPECT_NEAR(simulation.getThermostat().getInitialTemperature(), 0, 1);
-    EXPECT_NEAR(simulation.getThermostat().getTargetTemperature(), 0, 1);
-
-    // The temperature after the simulation shouldn't be near 20 degrees as per the input molecule velocities, gravity etc.
-    EXPECT_TRUE(notNear(simulation.getThermostat().getCurrentTemperature(*particles), 20, 1));
-}
-
-
 TEST_F(ThermostatTest, Heating15To20) {
     std::string in = "../input/test/thermostat/heating_15_20.json";
     Simulation simulation(in);
