@@ -88,6 +88,8 @@ public:
      */
     const std::vector<Particle> &getParticles() const;
 
+    virtual void applyToAllHalo(const std::function<void(Particle &)> &function);
+
     virtual nlohmann::ordered_json json();
 
     virtual std::string toString();

@@ -21,9 +21,9 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
                                                          BoundaryBehavior boundaryBehaviorBack)
         :
         xSize(xSize), ySize(ySize), zSize(zSize),
-        xCells(static_cast<int>(std::floor(xSize / cutoffRadius))),
-        yCells(static_cast<int>(std::floor(ySize / cutoffRadius))),
-        zCells(static_cast<int>(std::floor(zSize / cutoffRadius))),
+        xCells(static_cast<int>(xSize >= cutoffRadius ? std::floor(xSize / cutoffRadius)  : 1)),
+        yCells(static_cast<int>(ySize >= cutoffRadius ? std::floor(ySize / cutoffRadius)  : 1)),
+        zCells(static_cast<int>(zSize >= cutoffRadius ? std::floor(zSize / cutoffRadius)  : 1)),
         cutoffRadius(cutoffRadius),
         deltaT(deltaT), boundaryBehaviorTop(boundaryBehaviorTop),
         boundaryBehaviorBottom(boundaryBehaviorBottom), boundaryBehaviorRight(boundaryBehaviorRight),
@@ -161,19 +161,19 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
                     int neighborY = coords[1] + y;
                     int neighborZ = coords[2] + z;
 
-                    if (neighborX <= 0 || neighborX >= xCells - 1
+                    /*if (neighborX <= 0 || neighborX >= xCells - 1
                         || neighborY <= 0 || neighborY >= yCells - 1
-                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;
+                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
 
                     if (x == 0 && y == 0 && z == 0) continue;
 
-                    auto &currentCell = cells[index3dTo1d(neighborX, neighborY,
-                                                          neighborZ)];  // Extract vector from the pair
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
 
                     for (auto &p1: firstCell) {
                         for (auto &p2: currentCell) {
                             // Check if the pair has been processed before by comparing memory addresses
-                            if (&p1 < &p2) {
+                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius) {
                                 function(p1, p2);
                             }
                         }
@@ -183,41 +183,6 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
         }
     }
 }
-
-/*void LinkedCellParticleContainer::counterParticleReflection(Particle &particle, int cellIndex, const std::function<void(Particle&, Particle&)>& function) {
-    std::array<int, 3> cellCoords = index1dTo3d(cellIndex);
-    std::array<double, 3> particleCoords = particle.getX();
-
-    if (cellCoords[0] == 1) {
-        particleCoords[0] = -particleCoords[0];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[0] == xCells - 2) {
-        particleCoords[0] = 2 * xSize - particleCoords[0];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-
-    if(cellCoords[1] == 1) {
-        particleCoords[1] = -particleCoords[1];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[1] == yCells - 2) {
-        particleCoords[1] = 2 * ySize - particleCoords[1];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-
-    if(cellCoords[2] == 1) {
-        particleCoords[2] = -particleCoords[2];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    } else if (cellCoords[2] == zCells - 2) {
-        particleCoords[2] = 2 * zSize - particleCoords[2];
-        Particle reflectedParticle(particleCoords, particle.getV(), particle.getM(), particle.getEpsilon(),particle.getSigma(), particle.getType());
-        function(particle, reflectedParticle);
-    }
-}*/
 
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
@@ -229,7 +194,19 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
     }
 }
 
+void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Particle&)>& function) {
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        for (auto& particle : cells[cellIndex]) {
+            particle.setType(isHaloCellVector[cellIndex] ? 2 : 1);
+
+            function(particle);
+        }
+    }
+}
+
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
+    deleteParticlesInHaloCells();
+
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
@@ -241,6 +218,8 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
             updateParticleCell(cellIndex);
         }
     }
+
+    updateHaloCells();
 }
 
 void LinkedCellParticleContainer::add(const Particle &particle) {
@@ -264,6 +243,7 @@ void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
     for (auto it = cell.begin(); it != cell.end();) {
 
         vectorReverseReflection(*it);
+        handlePeriodicBoundary(*it);
 
         int newCellIndex = cellIndexForParticle(*it);
 
@@ -272,18 +252,6 @@ void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
             it = cell.erase(it);  // Remove the particle from the old cell
         } else {
             ++it;
-        }
-    }
-}
-
-void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
-    // Iterate through halo cells
-    for (int haloIndex : haloCellIndices) {
-        int cellIndex = haloIndex;
-
-        if (isHaloCellVector[haloIndex]) {
-            // Delete particles in the halo cell
-            cells[cellIndex].clear();
         }
     }
 }
@@ -300,121 +268,112 @@ int LinkedCellParticleContainer::size() {
     return size;
 }
 
-std::array<double, 3> LinkedCellParticleContainer::updateVelocityOnReflection(const std::array<double, 3> velocity, int axisIndex) {
-    std::array<double, 3> updatedVelocity = {velocity[0], velocity[1], velocity[2]};
-    updatedVelocity[axisIndex] = -velocity[axisIndex];
-    return updatedVelocity;
+double LinkedCellParticleContainer::updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+
+    return axisPosition - maxSize;
 }
-std::array<double, 3> LinkedCellParticleContainer::updatePositionOnReflection(const std::array<double, 3>& position, int axisIndex, double boundary) {
-    std::array<double, 3> updatedPosition = {position[0], position[1], position[2]};
-    updatedPosition[axisIndex] = 2 * boundary - position[axisIndex];
-    return updatedPosition;
+
+double LinkedCellParticleContainer::updatePositionOnLowerPeriodic(const double axisPosition, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+
+    return axisPosition + maxSize;
 }
-bool LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
-    if (axisIndex == 0 && boundaryBehaviorRight == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else if (axisIndex == 0 && boundaryBehaviorLeft == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else if (axisIndex == 1 && boundaryBehaviorTop == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else if (axisIndex == 1 && boundaryBehaviorBottom == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else if (axisIndex == 2 && boundaryBehaviorFront == BoundaryBehavior::Reflective && particle.getX()[axisIndex] >= axisMax) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMax));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else if (axisIndex == 2 && boundaryBehaviorBack == BoundaryBehavior::Reflective && particle.getX()[axisIndex] <= axisMin) {
-        particle.setX(updatePositionOnReflection(particle.getX(), axisIndex, axisMin));
-        particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-        return true;
-    } else {
-        return false;
+
+
+void LinkedCellParticleContainer::handlePeriodicBoundary(Particle& particle) {
+    std::array<double, 3> updatedPosition = particle.getX();
+
+    if(particle.getX()[0] > xSize && boundaryBehaviorRight == BoundaryBehavior::Periodic) {
+        updatedPosition[0] = updatePositionOnUpperPeriodic(updatedPosition[0], 0);
+    }else if(particle.getX()[0] < 0 && boundaryBehaviorLeft == BoundaryBehavior::Periodic) {
+        updatedPosition[0] = updatePositionOnLowerPeriodic(updatedPosition[0], 0);
+    }
+
+    if(particle.getX()[1] > ySize && boundaryBehaviorTop == BoundaryBehavior::Periodic) {
+        updatedPosition[1] = updatePositionOnUpperPeriodic(updatedPosition[1], 1);
+    } else if(particle.getX()[1] < 0 && boundaryBehaviorBottom == BoundaryBehavior::Periodic) {
+        updatedPosition[1] = updatePositionOnLowerPeriodic(updatedPosition[1], 1);
+    }
+
+    if(particle.getX()[2] > zSize && boundaryBehaviorFront == BoundaryBehavior::Periodic) {
+        updatedPosition[2] = updatePositionOnUpperPeriodic(updatedPosition[2], 2);
+    } else if(particle.getX()[2] < 0 && boundaryBehaviorBack == BoundaryBehavior::Periodic) {
+        updatedPosition[2] = updatePositionOnLowerPeriodic(updatedPosition[2], 2);
+    }
+
+    particle.setX(updatedPosition);
+}
+
+void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
+    // Iterate through halo cells
+    for (int haloIndex : haloCellIndices) {
+        // Delete particles in the halo cell
+        cells[haloIndex].clear();
     }
 }
-void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
-    bool reflected = false;
-    while(true) {
-        reflected = false;
-        reflected = reflectIfNecessaryOnAxis(particle,  0, xSize, 0);
-        reflected = reflected || reflectIfNecessaryOnAxis(particle, 0, ySize, 1);
-        reflected = reflected || reflectIfNecessaryOnAxis(particle,  0, zSize, 2);
-        if (!reflected) {
-            break;
+
+void LinkedCellParticleContainer::updateHaloCells() {
+    for (int boundaryCellIndex : boundaryCellIndices) {
+        std::array<int, 3> boundary3d = index1dTo3d(boundaryCellIndex);
+
+        if (boundaryBehaviorLeft == BoundaryBehavior::Periodic && boundary3d[0] == xCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 0);
+        } else if (boundaryBehaviorRight == BoundaryBehavior::Periodic && boundary3d[0] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 0);
+        }
+
+        if (boundaryBehaviorBottom == BoundaryBehavior::Periodic && boundary3d[1] == yCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 1);
+        } else if (boundaryBehaviorTop == BoundaryBehavior::Periodic && boundary3d[1] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 1);
+        }
+
+        if (boundaryBehaviorBack == BoundaryBehavior::Periodic && boundary3d[2] == zCells - 2) {
+            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 2);
+        } else if (boundaryBehaviorFront == BoundaryBehavior::Periodic && boundary3d[2] == 1) {
+            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 2);
         }
     }
 }
 
-/*
+void LinkedCellParticleContainer::upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+    int minCells = 0;
 
-std::array<double, 3> LinkedCellParticleContainer::updateVelocityOnReflection(const std::array<double, 3> velocity, int axisIndex) {
-    std::array<double, 3> updatedVelocity = {velocity[0], velocity[1], velocity[2]};
-    updatedVelocity[axisIndex] = -velocity[axisIndex];
-    return updatedVelocity;
-}
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[axisIndex] = minCells;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
-void LinkedCellParticleContainer::revertParticleVelocity(Particle &particle, int axisIndex) {
-    particle.setV(updateVelocityOnReflection(particle.getV(), axisIndex));
-}
+    for(auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[axisIndex] = updatedPosition[axisIndex] - maxSize;
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
 
-std::array<double, 3> LinkedCellParticleContainer::updatePositionOnReflection(Particle &particle, int axisIndex, bool isMaxBoundary) {
-    std::array<double, 3> maxPositions = {xSize, ySize, zSize};
-    std::array<double, 3> currentPos = particle.getX();
-
-    spdlog::info("Current position: {}, {}, {}", currentPos[0], currentPos[1], currentPos[2]);
-
-    if(isMaxBoundary) {
-        currentPos[axisIndex] = 2 * maxPositions[axisIndex] - currentPos[axisIndex];
-
-        if(currentPos[axisIndex] < 0) {
-            particle.setX(currentPos);
-            reflectIfNecessaryOnAxis(particle, 0, maxPositions[axisIndex], axisIndex);
-        } else {
-            revertParticleVelocity(particle, axisIndex);
-            return currentPos;
-        }
-
-    } else {
-        currentPos[axisIndex] = -particle.getX()[axisIndex];
-
-        if(currentPos[axisIndex] > maxPositions[axisIndex]) {
-            particle.setX(currentPos);
-            reflectIfNecessaryOnAxis(particle, 0, maxPositions[axisIndex], axisIndex);
-        } else {
-            revertParticleVelocity(particle, axisIndex);
-            return currentPos;
-        }
+        //spdlog::info("Adding particle to halo cell: {}, {}, {}", newParticle.getX()[0], newParticle.getX()[1], newParticle.getX()[2]);
+        addParticleToCell(haloCellIndex, newParticle);
     }
 }
 
+
+void LinkedCellParticleContainer::lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex) {
+    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
+    int maxCells = axisIndex == 0 ? xCells : axisIndex == 1 ? yCells : zCells;
+
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[axisIndex] = maxCells - 1;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
+
+    for(auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[axisIndex] = updatedPosition[axisIndex] + maxSize;
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+
+        addParticleToCell(haloCellIndex, newParticle);
+    }
+}
 
 void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
-    if (axisIndex == 0 && boundaryBehaviorRight == BoundaryBehavior::Reflective && particle.getX()[axisIndex] > axisMax) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, true));
-    } else if (axisIndex == 0 && boundaryBehaviorLeft == BoundaryBehavior::Reflective && particle.getX()[axisIndex] < axisMin) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, false));
-    } else if (axisIndex == 1 && boundaryBehaviorTop == BoundaryBehavior::Reflective && particle.getX()[axisIndex] > axisMax) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, true));
-    } else if (axisIndex == 1 && boundaryBehaviorBottom == BoundaryBehavior::Reflective && particle.getX()[axisIndex] < axisMin) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, false));
-    } else if (axisIndex == 2 && boundaryBehaviorBack == BoundaryBehavior::Reflective && particle.getX()[axisIndex] > axisMax) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, true));
-    } else if (axisIndex == 2 && boundaryBehaviorFront == BoundaryBehavior::Reflective && particle.getX()[axisIndex] < axisMin) {
-        particle.setX(updatePositionOnReflection(particle, axisIndex, false));
-    } else {
-        return;
-    }
-}*/
-
-//Final alternative is this:
-/*void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
     std::array<double, 3> position = particle.getX();
     std::array<double, 3> velocity = particle.getV();
 
@@ -466,7 +425,7 @@ void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
     reflectIfNecessaryOnAxis(particle,  0, xSize, 0);
     reflectIfNecessaryOnAxis(particle, 0, ySize, 1);
     reflectIfNecessaryOnAxis(particle,  0, zSize, 2);
-}*/
+}
 
 nlohmann::ordered_json LinkedCellParticleContainer::json() {
     nlohmann::ordered_json j;

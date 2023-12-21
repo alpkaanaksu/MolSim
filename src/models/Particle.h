@@ -120,6 +120,8 @@ void setV(const std::array<double, 3> &v_arg);
 
 void setX(const std::array<double, 3> &x_arg);
 
+void setType(int type_arg);
+
 /**
  * @brief Move f to oldF and give f a new value
  *

@@ -300,3 +300,62 @@ TEST_F(LinkedCellParticleContainerBehavioralTest, ParticleReflectsAtBackBoundary
 
     spdlog::info("ParticleReflectsAtBackBoundary test completed");
 }
+
+
+// Periodic particle count test, ensures that no particle is lost when all boundaries are periodic
+TEST_F(LinkedCellParticleContainerBehavioralTest,PeriodicParticleCount) {
+    std::string in = "../input/test/periodic/periodic_particle_count.json";
+    spdlog::info("Starting PeriodicParticleCount test with input file: {}", in);
+
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    EXPECT_EQ(linkedCellParticles->size(), 25) << "Incorrect particle count before the simulation.";
+    simulation.run();
+    EXPECT_EQ(linkedCellParticles->size(), 25) << "Incorrect particle count after simulation.";
+
+    spdlog::info("PeriodicParticleCount test completed");
+}
+
+
+TEST_F(LinkedCellParticleContainerBehavioralTest,SimplePeriodicLeftRight) {
+    std::string in = "../input/test/periodic/simple_periodic_left_right.json";
+    spdlog::info("Starting SimplePeriodicLeftRight test with input file: {}", in);
+
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    EXPECT_EQ(linkedCellParticles->size(), 1) << "Incorrect particle count after simulation.";
+    simulation.run();
+
+    Particle particle = findFirstParticle(linkedCellParticles);
+    EXPECT_NEAR(50.0, particle.getV()[0], 1) << "Particle did not cross the boundaries as expected.";
+
+    spdlog::info("SimplePeriodicLeftRight test completed");
+}
+
+
+TEST_F(LinkedCellParticleContainerBehavioralTest,SimplePeriodicTopBottom) {
+std::string in = "../input/test/periodic/simple_periodic_top_bottom.json";
+spdlog::info("Starting SimplePeriodicTopBottom test with input file: {}", in);
+
+Simulation simulation(in);
+
+auto particles = simulation.getParticles();
+auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+ASSERT_NE(linkedCellParticles, nullptr);
+
+EXPECT_EQ(linkedCellParticles->size(), 1) << "Incorrect particle count after simulation.";
+simulation.run();
+
+Particle particle = findFirstParticle(linkedCellParticles);
+EXPECT_NEAR(-50.0, particle.getV()[1], 1) << "Particle did not cross the boundaries as expected.";
+
+spdlog::info("SimplePeriodicTopBottom test completed");
+}

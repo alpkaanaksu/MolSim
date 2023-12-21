@@ -56,12 +56,12 @@ void ParticleContainer::add(const nlohmann::json &objects) {
             std::array<double, 3> f = {0., 0., 0.};
             std::array<double, 3> old_f = {0., 0., 0.};
 
-            if (object.contains("f")) {
-                f = object["f"];
+            if (object.contains("force")) {
+                f = object["force"];
             }
 
-            if (object.contains("old_f")) {
-                old_f = object["old_f"];
+            if (object.contains("old_force")) {
+                old_f = object["old_force"];
             }
 
             add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"]});
@@ -146,4 +146,8 @@ std::string ParticleContainer::getSource() {
 std::ostream &operator<<(std::ostream &stream, ParticleContainer &simulation) {
     stream << simulation.toString();
     return stream;
+}
+
+void ParticleContainer::applyToAllHalo(const std::function<void(Particle &)> &function) {
+    applyToAll(function);
 }

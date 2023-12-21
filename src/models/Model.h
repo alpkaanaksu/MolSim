@@ -37,12 +37,28 @@ public:
 
     Model() : force([](Particle &p1, Particle &p2){}), position([](Particle &p){}),  velocity([](Particle &p){}) {};
 
+
+    /**
+     * @brief Returns a function that takes a particle as a parameter and sets the force values of that particle along all axis to 0
+     *
+     * @return The lambda function for resetting the force
+     */
+
     static std::function<void(Particle&)> resetForceFunction() {
         return [](Particle &p) {
             p.updateF(std::array<double, 3> {0., 0., 0.});
         };
     };
 
+
+    /**
+     * @brief Returns a force vector, which if applied to a particle, would result in a force that is
+     *        equal to the gravitational force working on the particle
+     *
+     * @param m The mass of the particle, which the force vector is calculated for
+     * @param g The gravitational acceleration constant
+     * @return The force vector representing the gravitational force working on the particle
+     */
     static std::array<double, 3> verticalGravityForce(double m, double g) {
         return {0, m * g, 0};
     }

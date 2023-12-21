@@ -11,6 +11,7 @@
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
+#include <queue>
 
 /**
  * Simulation class
@@ -28,7 +29,7 @@ private:
     std::shared_ptr<ParticleContainer> particles;
     Model model;
     outputWriter::OutputType outputType;
-    int checkpoint;
+    std::queue<double> checkpoints;
     double gravity;
     Thermostat thermostat;
 
@@ -97,6 +98,9 @@ public:
     Model getModel() const;
 
     outputWriter::OutputType getOutputType() const;
+
+    const Thermostat &getThermostat() const;
+
 };
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation);

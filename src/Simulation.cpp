@@ -15,14 +15,13 @@
 #include "io/outputWriter/XYZWriter.h"
 #include "utils/MaxwellBoltzmannDistribution.h"
 #include <spdlog/spdlog.h>
+#include <chrono>
 
 #include "models/LinkedCellParticleContainer.h"
 
 using json = nlohmann::json;
 
-Simulation::Simulation(const std::string &filepath) : Simulation(filepath, -1) {}
-
-Simulation::Simulation(const std::string &filepath, const int checkpoint) : checkpoint(checkpoint) {
+Simulation::Simulation(const std::string &filepath) {
     json definition = JSONReader::readFile(filepath);
 
     if (definition["simulation"]["particle_container"]["type"] == "basic") {
@@ -106,8 +105,8 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
     in = filepath;
     outputType = outputWriter::stringToOutputType(definition["simulation"]["output_type"]);
     gravity = definition["simulation"].contains("gravity")
-            ? (double) definition["simulation"]["gravity"]
-            : 0.0;
+              ? (double) definition["simulation"]["gravity"]
+              : 0.0;
 
     particles->add(definition["objects"]);
 
@@ -117,48 +116,50 @@ Simulation::Simulation(const std::string &filepath, const int checkpoint) : chec
         model = Model::lennardJonesModel(deltaT);
     }
 
-    if(definition["simulation"].contains("thermostat")){
-        size_t dimension = definition["simulation"]["thermostat"]["dimension"];
-
+    if (definition["simulation"].contains("thermostat")) {
         thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
-                                definition["simulation"]["thermostat"]["interval"], dimension,
+                                definition["simulation"]["thermostat"]["interval"],
+                                definition["simulation"]["thermostat"]["dimension"],
                                 definition["simulation"]["thermostat"]["brownian"]);
 
         if (definition["simulation"]["thermostat"].contains("target_temperature") &&
             definition["simulation"]["thermostat"].contains("delta_temperature")) {
-            // target temperature and ∆T are specified
-            // along with initialTemperature, thermostatInterval, numDimensions, initializeWithBrownianMotion
+            // Target temperature and ∆T are specified
             thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
             thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
 
         } else if (definition["simulation"]["thermostat"].contains("target_temperature") &&
                    !definition["simulation"]["thermostat"].contains("delta_temperature")) {
-            // ∆T not specified
+            // Target temperature specified and ∆T not
             thermostat.setTargetTemperature(definition["simulation"]["thermostat"]["target_temperature"]);
 
         } else if (!definition["simulation"]["thermostat"].contains("target_temperature") &&
                    definition["simulation"]["thermostat"].contains("delta_temperature")) {
+            // ∆T specified and target temperature not
             thermostat.setMaxTemperatureChange(definition["simulation"]["thermostat"]["delta_temperature"]);
         } else {
-            // initialTemperature, thermostatInterval, numDimensions,
-            // initializeWithBrownianMotion specified in .json
-            // ∆T = ∞ and targetTemperature = initialTemperature
-
+            // ∆T = ∞ and targetTemperature = initialTemperature per default
             thermostat = Thermostat(definition["simulation"]["thermostat"]["initial_temperature"],
-                                    definition["simulation"]["thermostat"]["interval"], dimension,
+                                    definition["simulation"]["thermostat"]["interval"],
+                                    definition["simulation"]["thermostat"]["dimension"],
                                     definition["simulation"]["thermostat"]["brownian"]);
         }
 
     }
 
+    if(definition["simulation"].contains("checkpoints")){
+        for(auto &checkpoint : definition["simulation"]["checkpoints"]){
+            checkpoints.push(checkpoint);
+        }
+    }
 
+    checkpoints.push(-1);
 }
-
 
 Simulation::Simulation(Model model, double endTime, double deltaT, int videoDuration, int fps, const std::string &in,
                        std::string out, outputWriter::OutputType outputType)
         : endTime(endTime), deltaT(deltaT), videoDuration(videoDuration), fps(fps), in(in), out(std::move(out)),
-          model(std::move(model)), outputType(outputType), checkpoint(-1) {
+          model(std::move(model)), outputType(outputType) {
 
     FileReader::readFile(*particles, in);
 }
@@ -182,34 +183,23 @@ void Simulation::run() {
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
-
-    auto combinedForce = gravity != 0
-            ? [force, this](Particle &p1, Particle &p2) {
-                force(p1, p2);
-
-                p1.setF(p1.getF() + Model::verticalGravityForce(p1.getM(), gravity));
-                p2.setF(p2.getF() + Model::verticalGravityForce(p2.getM(), gravity));
-            }
-            : force;
-
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(combinedForce);
+    particles->applyToAllPairsOnce(force);
 
     // Brownian Motion with scaling factor
-    if (thermostat.getNumDimensions() != 5 && thermostat.isInitializeWithBrownianMotion()) {
+    if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
         thermostat.initializeTemperature(*particles);
-    } else {
-        // Brownian Motion for all particles
-        particles->applyToAll([](Particle &p) {
-            p.setV(p.getV() + maxwellBoltzmannDistributedVelocity(0.1, 3));
-        });
     }
 
+    double nextCheckpoint = checkpoints.front();
+    checkpoints.pop();
 
-    int lastOutput = 0;
+    auto before = std::chrono::high_resolution_clock::now();
+
+    long numberOfUpdates { 0 };
 
     // for this loop, we assume: current x, current f and current v are known
-    while (current_time < endTime) {
+    while (current_time <= endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
         auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
@@ -222,28 +212,36 @@ void Simulation::run() {
         }
 
         // calculate new f
-        particles->applyToAll(resetForce);
+        particles->applyToAll([&resetForce, this, &numberOfUpdates](Particle &p) {
+            resetForce(p);
+            p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+            numberOfUpdates++;
+        });
 
-        particles->applyToAllPairsOnce(combinedForce);
+        particles->applyToAllPairsOnce(force);
 
         // calculate new v
-        particles->applyToAll(velocity);
-
+        particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
+            velocity(p);
+        });
 
         iteration++;
 
-
-
-        if (thermostat.getNumDimensions() != 5 && iteration % thermostat.getThermostatInterval() == 0) {
+        if (thermostat.getNumDimensions() != -1 && iteration % thermostat.getThermostatInterval() == 0) {
             thermostat.scaleVelocities(*particles);
         }
 
 
-        if (checkpoint > 0 && iteration == checkpoint) {
-            spdlog::info("Checkpoint reached. Saving simulation to file.");
-            JSONWriter::writeFile(particles->json(), out + "/checkpoint.cp.json");
+        if (nextCheckpoint != -1 && current_time >= nextCheckpoint) {
+            std::ostringstream oss;
+            oss << std::setprecision(2) <<  nextCheckpoint;
+            std::string checkpointStr = oss.str();
+
+            spdlog::info("Checkpoint " + checkpointStr + " reached. Saving simulation to file.");
+            JSONWriter::writeFile(particles->json(), out + "/checkpoint_" + checkpointStr + ".cp.json");
             spdlog::info("Simulation saved.");
-            break;
+            nextCheckpoint = checkpoints.front();
+            checkpoints.pop();
         }
 
         if (iteration % plotInterval == 0) {
@@ -258,7 +256,24 @@ void Simulation::run() {
         current_time += deltaT;
     }
 
-    spdlog::info("Running simulation: [ 100% ] Done.");
+    auto after = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before);
+
+    std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(duration);
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration - sec);
+
+    spdlog::info("Running simulation: [ 100% ] Done.\n");
+
+    spdlog::info("Saving end state of the simulation to file.\n");
+    JSONWriter::writeFile(particles->json(), out + "/checkpoint_end.cp.json");
+
+    // MUP/s
+    double seconds = duration.count() / 1e6;
+    double updatesPerSecond = numberOfUpdates / seconds;
+
+    spdlog::info("Time: " + std::to_string(sec.count()) + "." + std::to_string(ms.count()));
+    spdlog::info("MUP/s: " + std::to_string(updatesPerSecond));
 }
 
 void Simulation::plotParticles(int iteration) {
@@ -292,18 +307,18 @@ void Simulation::plotParticles(int iteration) {
 std::string Simulation::toString() const {
     std::stringstream stream;
     stream << "\n====== Simulation ======"
-        << "\nEnd time: " << endTime
-        << "\nTime delta: " << deltaT
-        << "\nGravity: " << gravity
-        << "\nVideo duration (s): " << videoDuration
-        << "\nFrames per second: " << fps
-        << "\n"
-        << "\nReading from: " << in
-        << "\nOutput to: " << out << '/'
-        << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
-        << "\n" << particles->toString()
-        << "\n========================\n";
-  
+           << "\nEnd time: " << endTime
+           << "\nTime delta: " << deltaT
+           << "\nGravity: " << gravity
+           << "\nVideo duration (s): " << videoDuration
+           << "\nFrames per second: " << fps
+           << "\n"
+           << "\nReading from: " << in
+           << "\nOutput to: " << out << '/'
+           << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
+           << "\n" << particles->toString()
+           << "\n========================\n";
+
     return stream.str();
 }
 
@@ -343,6 +358,9 @@ outputWriter::OutputType Simulation::getOutputType() const {
     return outputType;
 }
 
+const Thermostat &Simulation::getThermostat() const {
+    return thermostat;
+}
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation) {
     stream << simulation.toString();

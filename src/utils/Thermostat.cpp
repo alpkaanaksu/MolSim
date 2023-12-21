@@ -6,16 +6,14 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
-// maxTemperatureChange set to default value zero makes sure that the scaling factor stays one
-// and the thermostat is not applied, if it wasn't initialized correctly
 Thermostat::Thermostat() : targetTemperature(0.0),
                            maxTemperatureChange(0.0),
                            thermostatInterval(0),
-                           numDimensions(5),
+                           numDimensions(-1),
                            initializeWithBrownianMotion(false) {
 }
 
-Thermostat::Thermostat(double initialTemperature, size_t thermostatInterval, size_t numDimensions,
+Thermostat::Thermostat(double initialTemperature, size_t thermostatInterval, int numDimensions,
                        bool initializeWithBrownianMotion)
         : initialTemperature(initialTemperature),
           targetTemperature(initialTemperature),
@@ -48,7 +46,7 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
 }
 
 
-double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) {
+double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) const {
     double kineticEnergy = 0.0;
     particleContainer.applyToAll([&kineticEnergy](Particle &particle) {
         double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
@@ -56,7 +54,6 @@ double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) {
 
         kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
     });
-
 
     // We assume everything to be dimensionless, therefore kB = 1.
     return 2 * kineticEnergy / (particleContainer.size() * numDimensions);
@@ -73,49 +70,48 @@ void Thermostat::initializeTemperature(ParticleContainer &particleContainer) {
 
 }
 
-
 double Thermostat::getInitialTemperature() const {
     return initialTemperature;
-}
-
-void Thermostat::setInitialTemperature(double initialTemperature) {
-    Thermostat::initialTemperature = initialTemperature;
 }
 
 double Thermostat::getTargetTemperature() const {
     return targetTemperature;
 }
 
-void Thermostat::setTargetTemperature(double targetTemperature) {
-    Thermostat::targetTemperature = targetTemperature;
-}
-
 double Thermostat::getMaxTemperatureChange() const {
     return maxTemperatureChange;
-}
-
-void Thermostat::setMaxTemperatureChange(double maxTemperatureChange) {
-    Thermostat::maxTemperatureChange = maxTemperatureChange;
 }
 
 size_t Thermostat::getThermostatInterval() const {
     return thermostatInterval;
 }
 
-void Thermostat::setThermostatInterval(size_t thermostatInterval) {
-    Thermostat::thermostatInterval = thermostatInterval;
-}
-
-size_t Thermostat::getNumDimensions() const {
+int Thermostat::getNumDimensions() const {
     return numDimensions;
-}
-
-void Thermostat::setNumDimensions(size_t numDimensions) {
-    Thermostat::numDimensions = numDimensions;
 }
 
 bool Thermostat::isInitializeWithBrownianMotion() const {
     return initializeWithBrownianMotion;
+}
+
+void Thermostat::setInitialTemperature(double initialTemperature) {
+    Thermostat::initialTemperature = initialTemperature;
+}
+
+void Thermostat::setTargetTemperature(double targetTemperature) {
+    Thermostat::targetTemperature = targetTemperature;
+}
+
+void Thermostat::setMaxTemperatureChange(double maxTemperatureChange) {
+    Thermostat::maxTemperatureChange = maxTemperatureChange;
+}
+
+void Thermostat::setThermostatInterval(size_t thermostatInterval) {
+    Thermostat::thermostatInterval = thermostatInterval;
+}
+
+void Thermostat::setNumDimensions(int numDimensions) {
+    Thermostat::numDimensions = numDimensions;
 }
 
 void Thermostat::setInitializeWithBrownianMotion(bool initializeWithBrownianMotion) {
