@@ -65,6 +65,7 @@ Our thermostat implementation incorporates a safeguard against division by zero 
 
 Looking ahead, we plan to implement Google Mocks for testing the relationship between the run() method of the Simulation and the temperature scaling performed by the thermostat. This could involve checking the expected number of method calls for different inputs, ensuring the robustness of our simulation.
 
+
 ## Periodic Boundaries
 
 To achieve the periodic boundary behaviour in the code, we have implemented a method called `handlePeriodicBoundary`, which ensures that the input particle seamlessly wraps around the simulation space when it reaches a boundary. For this method, we have implemented two helper methods: `updatePositionOnUpperPeriodic` and `updatePositionOnLowerPeriodic`. 
