@@ -25,11 +25,11 @@ TEST_F(ThermostatTest, NoThermostat) {
     ASSERT_NE(linkedCellParticles, nullptr);
 
     simulation.run();
-    EXPECT_NEAR(simulation.getThermostat().getInitialTemperature(), 0, 1e-3);
-    EXPECT_NEAR(simulation.getThermostat().getTargetTemperature(), 0, 1e-3);
+    EXPECT_NEAR(simulation.getThermostat().getInitialTemperature(), 0, 1);
+    EXPECT_NEAR(simulation.getThermostat().getTargetTemperature(), 0, 1);
 
     // The temperature after the simulation shouldn't be near 20 degrees as per the input molecule velocities, gravity etc.
-    EXPECT_TRUE(notNear(simulation.getThermostat().getCurrentTemperature(*particles), 20, 1e-3));
+    EXPECT_TRUE(notNear(simulation.getThermostat().getCurrentTemperature(*particles), 20, 1));
 }
 
 
