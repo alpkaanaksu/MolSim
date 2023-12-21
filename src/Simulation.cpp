@@ -325,6 +325,9 @@ outputWriter::OutputType Simulation::getOutputType() const {
     return outputType;
 }
 
+const Thermostat &Simulation::getThermostat() const {
+    return thermostat;
+}
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation) {
     stream << simulation.toString();
