@@ -47,7 +47,7 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
 }
 
 
-double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) {
+double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) const {
     double kineticEnergy = 0.0;
     particleContainer.applyToAll([&kineticEnergy](Particle &particle) {
         double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
@@ -75,44 +75,44 @@ double Thermostat::getInitialTemperature() const {
     return initialTemperature;
 }
 
-void Thermostat::setInitialTemperature(double initialTemperature) {
-    Thermostat::initialTemperature = initialTemperature;
-}
-
 double Thermostat::getTargetTemperature() const {
     return targetTemperature;
-}
-
-void Thermostat::setTargetTemperature(double targetTemperature) {
-    Thermostat::targetTemperature = targetTemperature;
 }
 
 double Thermostat::getMaxTemperatureChange() const {
     return maxTemperatureChange;
 }
 
-void Thermostat::setMaxTemperatureChange(double maxTemperatureChange) {
-    Thermostat::maxTemperatureChange = maxTemperatureChange;
-}
-
 size_t Thermostat::getThermostatInterval() const {
     return thermostatInterval;
+}
+
+int Thermostat::getNumDimensions() const {
+    return numDimensions;
+}
+
+bool Thermostat::isInitializeWithBrownianMotion() const {
+    return initializeWithBrownianMotion;
+}
+
+void Thermostat::setInitialTemperature(double initialTemperature) {
+    Thermostat::initialTemperature = initialTemperature;
+}
+
+void Thermostat::setTargetTemperature(double targetTemperature) {
+    Thermostat::targetTemperature = targetTemperature;
+}
+
+void Thermostat::setMaxTemperatureChange(double maxTemperatureChange) {
+    Thermostat::maxTemperatureChange = maxTemperatureChange;
 }
 
 void Thermostat::setThermostatInterval(size_t thermostatInterval) {
     Thermostat::thermostatInterval = thermostatInterval;
 }
 
-size_t Thermostat::getNumDimensions() const {
-    return numDimensions;
-}
-
-void Thermostat::setNumDimensions(size_t numDimensions) {
+void Thermostat::setNumDimensions(int numDimensions) {
     Thermostat::numDimensions = numDimensions;
-}
-
-bool Thermostat::isInitializeWithBrownianMotion() const {
-    return initializeWithBrownianMotion;
 }
 
 void Thermostat::setInitializeWithBrownianMotion(bool initializeWithBrownianMotion) {

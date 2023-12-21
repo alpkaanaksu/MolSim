@@ -98,6 +98,9 @@ public:
     Model getModel() const;
 
     outputWriter::OutputType getOutputType() const;
+
+    const Thermostat &getThermostat() const;
+
 };
 
 std::ostream &operator<<(std::ostream &stream, Simulation &simulation);

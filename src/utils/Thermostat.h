@@ -29,33 +29,31 @@ public:
     // Function to scale velocities directly or gradually
     void scaleVelocities(ParticleContainer &particleContainer);
 
-    // Function to get the current temperature
-    double getCurrentTemperature(ParticleContainer &particleContainer);
+    double getCurrentTemperature(ParticleContainer &particleContainer) const;
 
     double getInitialTemperature() const;
 
-    void setInitialTemperature(double initialTemperature);
-
     double getTargetTemperature() const;
-
-    void setTargetTemperature(double targetTemperature);
 
     double getMaxTemperatureChange() const;
 
-    void setMaxTemperatureChange(double maxTemperatureChange);
-
     size_t getThermostatInterval() const;
 
-    void setThermostatInterval(size_t thermostatInterval);
-
-    size_t getNumDimensions() const;
-
-    void setNumDimensions(size_t numDimensions);
+    int getNumDimensions() const;
 
     bool isInitializeWithBrownianMotion() const;
 
-    void setInitializeWithBrownianMotion(bool initializeWithBrownianMotion);
+    void setInitialTemperature(double initialTemperature);
 
+    void setTargetTemperature(double targetTemperature);
+
+    void setMaxTemperatureChange(double maxTemperatureChange);
+
+    void setThermostatInterval(size_t thermostatInterval);
+
+    void setNumDimensions(int numDimensions);
+
+    void setInitializeWithBrownianMotion(bool initializeWithBrownianMotion);
 };
 
 
