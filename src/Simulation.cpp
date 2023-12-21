@@ -184,13 +184,7 @@ void Simulation::run() {
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
         thermostat.initializeTemperature(*particles);
-    } else {
-        // Brownian Motion for all particles
-        particles->applyToAll([](Particle &p) {
-            p.setV(p.getV() + maxwellBoltzmannDistributedVelocity(0.1, 3));
-        });
     }
-
 
     int lastOutput = 0;
 
