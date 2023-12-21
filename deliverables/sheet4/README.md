@@ -110,4 +110,9 @@ TODO
 
 ## Performance / Profiling
 
+### Attempt for Optimization
+We decided modifying the iteration approach in the `applyToAllPairs` method. Originally, we looped through all neighbors in the x, y, and z axes, including both positive and negative directions. To optimize this, we decided to iterate only in the positive direction (0 <= 1) for each axis. This change eliminated the need for the check `&p1 < &p2` since the function wouldn't be applied twice to the same pair in this algorithm.
+
+This adjustment theoretically aimed to enhance performance without altering the simulation outcome. We indeed observed an improvement in performance, however the simulation behavior differed significantly for a reason we couldn't find (yet), therefore the profiling results became useless for a simulation with incorrect behavior, that's why we disregarded them.
+
 TODO
