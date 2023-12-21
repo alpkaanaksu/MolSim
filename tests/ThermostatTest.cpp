@@ -122,3 +122,104 @@ TEST_F(ThermostatTest, HeatingGradualSmallMaxTemperature) {
     EXPECT_TRUE(notNear(simulation.getThermostat().getCurrentTemperature(*particles), 20, 1e-3));
 }
 
+
+
+
+TEST_F(ThermostatTest, Cooling20To15) {
+    std::string in = "../input/test/thermostat/cooling_20_15.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 20);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 15);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 15, 1e-3);
+
+}
+
+TEST_F(ThermostatTest, Cooling25To0) {
+    std::string in = "../input/test/thermostat/cooling_25_0.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 25);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 0);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 0, 1e-3);
+
+}
+
+TEST_F(ThermostatTest, Cooling3D25To0) {
+    std::string in = "../input/test/thermostat/cooling_3D_25_0.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 25);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 0);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 0, 1e-3);
+
+}
+
+TEST_F(ThermostatTest, CoolingGradual6To2) {
+    std::string in = "../input/test/thermostat/cooling_gradual_6_2.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 6);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 2);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 2, 1e-3);
+}
+
+TEST_F(ThermostatTest, Holding7) {
+    std::string in = "../input/test/thermostat/holding_7.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 7);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 7);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 7, 1e-3);
+}
+
+TEST_F(ThermostatTest, Holding30) {
+    std::string in = "../input/test/thermostat/holding_30.json";
+    Simulation simulation(in);
+
+    auto particles = simulation.getParticles();
+    auto linkedCellParticles = std::dynamic_pointer_cast<LinkedCellParticleContainer>(particles);
+    ASSERT_NE(linkedCellParticles, nullptr);
+
+    simulation.run();
+    SPDLOG_INFO("Current Temperature: {}", simulation.getThermostat().getCurrentTemperature(*particles));
+
+    EXPECT_EQ(simulation.getThermostat().getInitialTemperature(), 30);
+    EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 30);
+    EXPECT_NEAR(simulation.getThermostat().getCurrentTemperature(*particles), 30, 1e-3);
+}
