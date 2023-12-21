@@ -235,7 +235,6 @@ public:
     * @param axisIndex The index of the axis for which the position is updated.
     * @return The updated position on the upper periodic boundary.
     */
-
     double updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex);
 
 
@@ -253,7 +252,6 @@ public:
      * @param axisIndex The index of the axis for which the position is updated.
      * @return The updated position on the lower periodic boundary.
      */
-
     double updatePositionOnLowerPeriodic(const double axisPosition, int axisIndex);
 
 
@@ -269,7 +267,6 @@ public:
      * @param particle The particle for which periodic boundary conditions are applied.
      * @return
      */
-
     void handlePeriodicBoundary(Particle &particle);
 
 
@@ -286,7 +283,6 @@ public:
     * @param boundaryCellIndex The index of the lower boundary cell to be copied to upper halo cells.
     * @param axisIndex The index of the axis along which the copying occurs.
     */
-
     void lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex);
 
 
@@ -303,7 +299,6 @@ public:
      * @param boundaryCellIndex The index of the upper boundary cell to be copied to lower halo cells.
      * @param axisIndex The index of the axis along which the copying occurs.
      */
-
     void upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex);
 
 
@@ -317,7 +312,6 @@ public:
     * from the boundary cells to the halo cells along each axis. This synchronization maintains the continuity
     * of particles between the boundary and halo regions along each axis.
     */
-
     void updateHaloCells();
 
 
@@ -332,7 +326,6 @@ public:
      *
      * @param function
      */
-
     void applyToAllHalo(const std::function<void(Particle &)> &function);
 
 
@@ -341,7 +334,6 @@ public:
      * @brief Remove all particles from halo cells.
      * Clear halo cells.
      */
-
     void deleteParticlesInHaloCells();
 
 
@@ -374,7 +366,6 @@ public:
     * @param axisIndex The index of the axis along which the reflection is applied (0 for x, 1 for y, 2 for z).
     *
     */
-
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
 };

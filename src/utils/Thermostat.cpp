@@ -6,7 +6,6 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
-// Thermostat is not applied, if it wasn't initialized correctly, this is done by checking the value of numDimensions
 Thermostat::Thermostat() : targetTemperature(0.0),
                            maxTemperatureChange(0.0),
                            thermostatInterval(0),
