@@ -59,8 +59,6 @@ public:
      * @param g The gravitational acceleration constant
      * @return The force vector representing the gravitational force working on the particle
      */
-
-
     static std::array<double, 3> verticalGravityForce(double m, double g) {
         return {0, m * g, 0};
     }
