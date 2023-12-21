@@ -8,7 +8,7 @@
 ## Code
 - Link:     https://github.com/alpkaanaksu/MolSim
 - Branch:   master
-- Revision: TODO
+- Revision: 7f1e10a5307ca12335ed9d0b19043a91d04f3216
 
 **Works with:**
 - **Compiler:** clang 15.0.0
