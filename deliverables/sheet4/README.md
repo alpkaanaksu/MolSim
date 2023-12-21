@@ -59,7 +59,23 @@ TODO
 
 ## Periodic Boundaries
 
-TODO
+To achieve the periodic boundary behaviour in the code, we have implemented a method called `handlePeriodicBoundary`, which ensures that the input particle seamlessly wraps around the simulation space when it reaches a boundary. For this method, we have implemented two helper methods: `updatePositionOnUpperPeriodic` and `updatePositionOnLowerPeriodic`. 
+
+The purpose of the `updatePositionOnUpperPeriodic` function is to adjust the position of a particle when it crosses the upper boundary along a certain axis. Based on the current position of the particle and the corresponding axis index, the function calculates the `maxSize` of the axis for which the particle has crossed the boundary. It then returns the updated position of the particle by subtracting the `maxSize` from the current position. This process causes the particle to reappear at the lower end of the periodic boundary along the specified axis. 
+
+Similarly, the `updatePositionOnLowerPeriodic` function handles the case where a particle exceeds the lower limit along a particular axis and brings it to the upper end  (maximum possible coordinate inside the simulation) of the periodic limit along the specified axis. 
+
+The `handlePeriodicBoundary` function starts by capturing the current position of the particle. It then checks whether the particle has exceeded the limits along the X, Y and Z axes. If this is the case and the behaviour of the respective boundary is set to "Periodic", it calls the corresponding auxiliary function to update the position of the particle. For example, if the X coordinate of the particle exceeds the right boundary and the periodic behaviour is activated for that boundary, the function calls `updatePositionOnUpperPeriodic` to adjust the X coordinate. The same logic applies to the Y and Z axes to ensure that the particles smoothly wrap around the simulation space and maintain a continuous and periodic simulation environment. 
+
+In simulations with periodic boundary conditions, maintaining particle continuity across boundaries involves managing the migration between the boundary and halo layers on opposite sides. The `updateHaloCells` method plays a crucial role in synchronizing halo cells with the current state of boundary cells in the particle container. 
+
+To accomplish this task, the method utilizes the `upperBoundaryToLowerHaloOneAxis` and `lowerBoundaryToUpperHaloOneAxis` functions. It first checks if a boundary is periodic; if so, it activates the corresponding auxiliary function. This auxiliary function is responsible for copying particles from boundary cells to halo cells along each axis. 
+
+The `lowerBoundaryToUpperHaloOneAxis` method does the following steps: it converts the parameter boundary cell index to a 3D index, then sets the position along the specified axis to the maximum cell index (representing the respective upper halo cell). Subsequently, it converts the updated 3D index back to a 1D index, reflecting the upper halo cell. Lastly, the method iterates through all particles in the lower boundary cell, generating new particles with updated positions, identical velocity, mass, and other properties. These new particles are then added to the upper halo cell using the `addParticleToCell` method. The `upperBoundaryToLowerHaloOneAxis` method operates analogously but in the opposite direction of the boundaries. 
+
+As a concrete example, if the left boundary (x = 0.0) is periodic, the algorithm copies particles from boundary cells with x-index 0 to the halo cells with x-index xCells-1. Here, `xCells` represents the total number of cells along the x-axis in the simulation, including inner, boundary, and halo cells. 
+
+Along implementation of the periodic boundaries, we have also made some changes to the reflection implementation. The algorithm has remained the same, but we have removed some of the auxiliary functions that made the code unreadable rather than readable, moreover our new implementation covers the edge case where a particle is moving so fast that we need to reflect it more than once in the same iteration.
 
 ## Gravitational Force
 We added a new static method called `verticalGravityForce` to our `Model` class. Given `m`, this method calculates the gravitational force for a particle. We add the resulting vector to the force vector of the particles in each step, together with the Lennard-Jones force. 
