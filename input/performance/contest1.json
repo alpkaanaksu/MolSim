@@ -18,7 +18,7 @@
         "right": "periodic"
       }
     },
-    "end_time": 5,
+    "end_time": 0.5,
     "time_delta": 0.0005,
     "video_duration": 40,
     "frame_rate": 24,
