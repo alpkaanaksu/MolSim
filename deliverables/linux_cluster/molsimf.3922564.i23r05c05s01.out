@@ -1,0 +1,39 @@
+Hello from MolSim for PSE!
+
+[2024-01-10 18:16:43.193] [info] Starting simulation...
+
+====== Simulation ======
+End time: 0.5
+Time delta: 0.0005
+Gravity: -12.44
+Video duration (s): 40
+Frames per second: 24
+
+Reading from: ../input/performance/contest1.json
+Output to: output/
+Output type: Disabled
+
+--- Container ---------
+Type: linked-cell
+Domain size: 300.00 • 54.00 • 1.00
+Cell size: 3.00 • 3.00 • 1.00
+Number of particles: 10000
+Boundary behavior (top): Reflective
+Boundary behavior (bottom): Reflective
+Boundary behavior (left): Periodic
+Boundary behavior (right): Periodic
+Boundary behavior (front): Reflective
+Boundary behavior (back): Reflective
+------------------------
+
+========================
+
+[2024-01-10 18:16:43.194] [info] Folder already exists: output
+[2024-01-10 18:16:43.194] [info] Removing the folder: output
+[2024-01-10 18:16:43.391] [info] Folder created successfully: output
+[2024-01-10 18:17:12.298] [info] Running simulation: [ 100% ] Done.
+
+[2024-01-10 18:17:12.298] [info] Saving end state of the simulation to file.
+
+[2024-01-10 18:17:12.368] [info] Time: 28.878
+[2024-01-10 18:17:12.368] [info] MUP/s: 346273.516949
