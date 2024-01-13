@@ -67,13 +67,13 @@ void ParticleContainer::add(const nlohmann::json &objects) {
             add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"]});
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "sphere") {
             Generator::sphere(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "disk") {
             Generator::disk(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "checkpoint") {
             resolveCheckpoint(object["path"]);
         }
