@@ -99,7 +99,7 @@ target_link_libraries(sources
         spdlog::spdlog
         nlohmann_json::nlohmann_json)
 
-target_link_libraries(MolSim sources)
+target_link_libraries(MolSim PUBLIC sources)
 
 # collect all cpp files for tests
 file(GLOB_RECURSE MY_TESTS
