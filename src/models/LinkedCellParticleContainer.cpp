@@ -8,6 +8,8 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
+#include <omp.h>
+
 #include "Particle.h"
 #include "../utils/ArrayUtils.h"
 
@@ -136,7 +138,13 @@ int LinkedCellParticleContainer::cellIndexForParticle(const Particle &particle) 
 
 void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(Particle&, Particle&)>& function) {
     // Iterate through all cells in the container
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        #ifdef _OPENMP
+        std::cout << "Thread: " << omp_get_thread_num() << std::endl;
+        #endif
         // Skip halo cells
         if (!isHaloCellVector[cellIndex]) continue;
 
@@ -185,6 +193,9 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
 }
 
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
@@ -195,6 +206,9 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
 }
 
 void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Particle&)>& function) {
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         for (auto& particle : cells[cellIndex]) {
             particle.setType(isHaloCellVector[cellIndex] ? 2 : 1);
@@ -207,6 +221,9 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
     deleteParticlesInHaloCells();
 
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
