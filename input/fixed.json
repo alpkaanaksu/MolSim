@@ -78,7 +78,7 @@
       "mass": 2,
       "sigma": 0.9412,
       "epsilon": 1,
-      "fixed": false
+      "fixed": true
     }
   ]
 }

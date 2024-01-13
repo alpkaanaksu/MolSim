@@ -147,8 +147,8 @@ Simulation::Simulation(const std::string &filepath) {
 
     }
 
-    if(definition["simulation"].contains("checkpoints")){
-        for(auto &checkpoint : definition["simulation"]["checkpoints"]){
+    if (definition["simulation"].contains("checkpoints")) {
+        for (auto &checkpoint: definition["simulation"]["checkpoints"]) {
             checkpoints.push(checkpoint);
         }
     }
@@ -196,7 +196,7 @@ void Simulation::run() {
 
     auto before = std::chrono::high_resolution_clock::now();
 
-    long numberOfUpdates { 0 };
+    long numberOfUpdates{0};
 
     // for this loop, we assume: current x, current f and current v are known
     while (current_time <= endTime) {
@@ -221,9 +221,7 @@ void Simulation::run() {
         particles->applyToAllPairsOnce(force);
 
         // calculate new v
-        particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
-            velocity(p);
-        });
+        particles->applyToAll(velocity);
 
         iteration++;
 
@@ -234,7 +232,7 @@ void Simulation::run() {
 
         if (nextCheckpoint != -1 && current_time >= nextCheckpoint) {
             std::ostringstream oss;
-            oss << std::setprecision(2) <<  nextCheckpoint;
+            oss << std::setprecision(2) << nextCheckpoint;
             std::string checkpointStr = oss.str();
 
             spdlog::info("Checkpoint " + checkpointStr + " reached. Saving simulation to file.");
@@ -346,7 +344,7 @@ std::string Simulation::getOutputPath() const {
     return out;
 }
 
-std::shared_ptr<ParticleContainer> Simulation::getParticles() const {
+std::shared_ptr <ParticleContainer> Simulation::getParticles() const {
     return particles;
 }
 

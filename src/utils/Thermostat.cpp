@@ -41,7 +41,9 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
     }
 
     particleContainer.applyToAll([&scalingFactor](Particle &p) {
+        if(!p.isFixed()){
         p.setV(scalingFactor * p.getV());
+        }
     });
 }
 
