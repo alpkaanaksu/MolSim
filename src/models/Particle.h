@@ -18,91 +18,102 @@
 class Particle {
 
 private:
-  /**
-   * Position of the particle
-   */
-  std::array<double, 3> x;
+    /**
+     * Position of the particle
+     */
+    std::array<double, 3> x;
 
-  /**
-   * Velocity of the particle
-   */
-  std::array<double, 3> v;
+    /**
+     * Velocity of the particle
+     */
+    std::array<double, 3> v;
 
-  /**
-   * Force effective on this particle
-   */
-  std::array<double, 3> f;
+    /**
+     * Force effective on this particle
+     */
+    std::array<double, 3> f;
 
-  /**
-   * Force which was effective on this particle
-   */
-  std::array<double, 3> old_f;
+    /**
+     * Force which was effective on this particle
+     */
+    std::array<double, 3> old_f;
 
-  /**
-   * Mass of this particle
-   */
-  double m;
+    /**
+     * Mass of this particle
+     */
+    double m;
 
-  /**
-   * Type of the particle. Use it for whatever you want (e.g. to separate
-   * molecules belonging to different bodies, matters, and so on)
-   */
-  int type;
+    /**
+     * Type of the particle. Use it for whatever you want (e.g. to separate
+     * molecules belonging to different bodies, matters, and so on)
+     */
+    int type;
 
-  double epsilon;
 
-  double sigma;
+    /** Indicates that a particle doesn't move and no force is applied upon it
+     * However the particle still exerts force on other particles
+     */
+    bool fixed;
+
+    double epsilon;
+
+    double sigma;
 
 public:
-  explicit Particle(int type = 0);
+    explicit Particle(int type = 0);
 
-  Particle(const Particle &other);
-
-  Particle(
-      // for visualization, we need always 3 coordinates
-      // -> in case of 2d, we use only the first and the second
-      std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
-      int type = 0);
+    Particle(const Particle &other);
 
     Particle(
             // for visualization, we need always 3 coordinates
             // -> in case of 2d, we use only the first and the second
-            std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig,
-            int type = 0);
+            std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
+            int type = 0, bool fix = false);
 
-  virtual ~Particle();
+    Particle(
+            // for visualization, we need always 3 coordinates
+            // -> in case of 2d, we use only the first and the second
+            std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg,
+            std::array<double, 3> old_f_arg, double m_arg, double eps, double sig,
+            int type = 0, bool fix = false);
 
-  const std::array<double, 3> &getX() const;
+    virtual ~Particle();
 
-  const std::array<double, 3> &getV() const;
+    const std::array<double, 3> &getX() const;
 
-  const std::array<double, 3> &getF() const;
+    const std::array<double, 3> &getV() const;
 
-  const std::array<double, 3> &getOldF() const;
+    const std::array<double, 3> &getF() const;
 
-  double getM() const;
+    const std::array<double, 3> &getOldF() const;
 
-  int getType() const;
+    double getM() const;
 
-  bool operator==(Particle &other);
+    int getType() const;
 
-  double getSigma() const;
+    bool operator==(Particle &other);
 
-  double getEpsilon() const;
+    double getSigma() const;
 
-  void setEpsilon(double eps);
+    double getEpsilon() const;
 
-  void setSigma(double sig);
+    bool isFixed() const;
 
-std::string toString() const;
+    void setEpsilon(double eps);
 
-  /**
-   * @brief Calculates the distance between the current particle and another one
-   *
-   * @param particle
-   * @return Distance to another particle
-   */
-double distanceTo(Particle &particle);
+    void setSigma(double sig);
+
+    void setFixed(bool fixed) ;
+
+    std::string toString() const;
+
+    /**
+     * @brief Calculates the distance between the current particle and another one
+     *
+     * @param particle
+     * @return Distance to another particle
+     */
+    double distanceTo(Particle &particle);
 
 /**
  * @brief Calculates the distance between the current particle and another one
@@ -110,31 +121,31 @@ double distanceTo(Particle &particle);
  * @param particle
  * @return
  */
-std::array<double, 3> diffTo(Particle &particle);
+    std::array<double, 3> diffTo(Particle &particle);
 
-void setOldF(const std::array<double, 3> &old_f_arg);
+    void setOldF(const std::array<double, 3> &old_f_arg);
 
-void setF(const std::array<double, 3> &f_arg);
+    void setF(const std::array<double, 3> &f_arg);
 
-void setV(const std::array<double, 3> &v_arg);
+    void setV(const std::array<double, 3> &v_arg);
 
-void setX(const std::array<double, 3> &x_arg);
+    void setX(const std::array<double, 3> &x_arg);
 
-void setType(int type_arg);
+    void setType(int type_arg);
 
 /**
  * @brief Move f to oldF and give f a new value
  *
  * @param f_arg
  */
-void updateF(const std::array<double, 3> &f_arg);
+    void updateF(const std::array<double, 3> &f_arg);
 
 /**
  * @brief Returns a json representation of the particle
  *
  * @return nlohmann::json object representing a particle
  */
-nlohmann::ordered_json json();
+    nlohmann::ordered_json json();
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
