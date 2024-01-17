@@ -210,7 +210,7 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
         for (auto &particle : cells[cellIndex]) {
-            if(particle.pulled) {
+            if(particle.isPulled()) {
                 particle.setF(particle.getF() + pullingForce);
             }
             for(auto &neighborParticle : particle.getDirectNeighbors()) {

@@ -49,7 +49,9 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                                      sigma,
                                      typeId,
                                      avgBondLength,
-                                     stiffnessFactor};
+                                     stiffnessFactor,
+                                     (x == 17 && y == 24) || (x == 17 && y == 25) || (x == 18 && y == 24) || (x == 18 && y == 25)
+                                     };
 
                 // Add the Particle to the container
                 container.add(newParticle);

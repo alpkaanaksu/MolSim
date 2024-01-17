@@ -61,6 +61,8 @@ private:
 
   int stiffnessFactor;
 
+  bool pulled;
+
 public:
   explicit Particle(int type = 0);
 
@@ -70,7 +72,7 @@ public:
       // for visualization, we need always 3 coordinates
       // -> in case of 2d, we use only the first and the second
       std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
-      int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0);
+      int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
 
   Particle(
             // for visualization, we need always 3 coordinates
@@ -78,7 +80,7 @@ public:
             std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig,
             int type = 0);
 
-  Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0);
+  Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
 
   virtual ~Particle();
 
@@ -157,6 +159,8 @@ std::vector<Particle *> &getDiagonalNeighbors();
 double getAvgBondLength();
 
 int getStiffnessFactor();
+
+bool isPulled();
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
