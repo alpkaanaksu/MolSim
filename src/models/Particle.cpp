@@ -27,10 +27,10 @@ Particle::Particle(const Particle &other)
 }
 
 Particle::Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg,
-                   double m_arg, double eps, double sig, int type_arg)
+                   double m_arg, double eps, double sig, int type_arg, double avgBondLength_arg, int stiffnessFactor_arg)
         : x(x_arg), v(v_arg), m(m_arg), type(type_arg),
           f({0., 0., 0.}), old_f({0., 0., 0.}), epsilon(eps), sigma(sig),
-          directNeighbors(), diagonalNeighbors() {
+          directNeighbors(), diagonalNeighbors(), avgBondLength(avgBondLength_arg), stiffnessFactor(stiffnessFactor_arg) {
     spdlog::debug("Particle generated!");
 }
 

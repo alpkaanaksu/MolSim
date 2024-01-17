@@ -70,7 +70,7 @@ public:
       // for visualization, we need always 3 coordinates
       // -> in case of 2d, we use only the first and the second
       std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
-      int type = 0);
+      int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0);
 
   Particle(
             // for visualization, we need always 3 coordinates

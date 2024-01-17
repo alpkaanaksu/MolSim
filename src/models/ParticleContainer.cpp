@@ -76,6 +76,9 @@ void ParticleContainer::add(const nlohmann::json &objects) {
                               object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
         } else if (object["type"] == "checkpoint") {
             resolveCheckpoint(object["path"]);
+        } else if (object["type"] == "membrane") {
+            Generator::membrane(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["avg_bond_length"], object["stiffness_factor"]);
         }
     }
 }

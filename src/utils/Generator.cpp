@@ -30,7 +30,7 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
 }
 
 void Generator::membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
-                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma) {
+                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor) {
 
     std::vector<Particle> particleIndexVector;
 
@@ -47,7 +47,9 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                                      mass,
                                      epsilon,
                                      sigma,
-                                     typeId};
+                                     typeId,
+                                     avgBondLength,
+                                     stiffnessFactor};
 
                 // Add the Particle to the container
                 container.add(newParticle);

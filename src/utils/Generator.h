@@ -50,5 +50,5 @@ namespace Generator {
                 std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma);
 
     void membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
-                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma);
+                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor);
 }
