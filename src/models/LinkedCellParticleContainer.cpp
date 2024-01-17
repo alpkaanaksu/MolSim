@@ -204,6 +204,36 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
     }
 }
 
+void LinkedCellParticleContainer::applyMembraneForceToAll() {
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
+
+        for (auto &particle : cells[cellIndex]) {
+            for(auto &neighborParticle : particle.getDirectNeighbors()) {
+                if (&particle < &neighborParticle) {
+                    double membraneForce = 0.0;
+                    membraneForce = particle.getStiffnessFactor() * (neighborParticle.distanceTo(particle) - particle.getAvgBondLength())
+                            * particle.diffTo(neighborParticle) / neighborParticle.distanceTo(particle);
+
+                    particle.setF(particle.getF() + membraneForce);
+                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                }
+            }
+
+            for(auto &neighborParticle : particle.getDiagonalNeighbors()) {
+                if (&particle < &neighborParticle) {
+                    double membraneForce = 0.0;
+                    membraneForce = particle.getStiffnessFactor() * (neighborParticle.distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
+                                    * particle.diffTo(neighborParticle) / neighborParticle.distanceTo(particle);
+
+                    particle.setF(particle.getF() + membraneForce);
+                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                }
+            }
+        }
+    }
+}
+
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
     deleteParticlesInHaloCells();
 

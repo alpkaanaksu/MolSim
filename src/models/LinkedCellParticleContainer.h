@@ -368,6 +368,8 @@ public:
     */
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
+    void applyMembraneForceToAll();
+
 };
 
 

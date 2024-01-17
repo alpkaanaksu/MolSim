@@ -151,3 +151,11 @@ std::vector<Particle *> &Particle::getDirectNeighbors() {
 std::vector<Particle *> &Particle::getDiagonalNeighbors() {
     return diagonalNeighbors;
 }
+
+double Particle::getAvgBondLength() {
+    return avgBondLength;
+}
+
+int Particle::getStiffnessFactor() {
+    return stiffnessFactor;
+}

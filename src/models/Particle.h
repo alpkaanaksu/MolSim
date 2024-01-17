@@ -153,6 +153,10 @@ void addDiagonalNeighbor(Particle *neighbor);
 std::vector<Particle *> &getDirectNeighbors();
 
 std::vector<Particle *> &getDiagonalNeighbors();
+
+double getAvgBondLength();
+
+int getStiffnessFactor();
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
