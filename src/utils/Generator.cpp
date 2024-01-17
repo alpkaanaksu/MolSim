@@ -6,24 +6,66 @@
 #include "ArrayUtils.h"
 #include <array>
 #include <iostream>
+#include <spdlog/spdlog.h>
 
-void Generator::cuboid(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
+void Generator::membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
                        double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma) {
+
+    std::vector<Particle> particleIndexVector;
+
     for (int x = 0; x < size[0]; x++) {
         for (int y = 0; y < size[1]; y++) {
             for (int z = 0; z < size[2]; z++) {
-                container.add(Particle{{
-                                               position[0] + x * meshWidth,
-                                               position[1] + y * meshWidth,
-                                               position[2] + z * meshWidth
-                                       },
-                                       velocity,
-                                       mass,
-                                       epsilon,
-                                       sigma,
-                                       typeId}
-                );
+                Particle newParticle {
+                                    {
+                                         position[0] + x * meshWidth,
+                                         position[1] + y * meshWidth,
+                                         position[2] + z * meshWidth
+                                     },
+                                     velocity,
+                                     mass,
+                                     epsilon,
+                                     sigma,
+                                     typeId};
+
+                // Add the Particle to the container
+                container.add(newParticle);
+                particleIndexVector.push_back(newParticle);
             }
+        }
+    }
+
+    for (int i = 0; i < particleIndexVector.size(); i++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                // Skip the current particle
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                int nx = i / size[1] + dx;
+                int ny = i % size[1] + dy;
+
+                // Check if the neighbor is within the valid range
+                if (nx >= 0 && nx < size[0] && ny >= 0 && ny < size[1]) {
+                    int neighborParticleIndex = ny * size[0] + nx;
+
+                    if (neighborParticleIndex >= 0 && neighborParticleIndex < particleIndexVector.size()) {
+                        if (dx == 0 || dy == 0) {
+                            particleIndexVector[i].addDirectNeighbor(&particleIndexVector[neighborParticleIndex]);
+                        } else {
+                            particleIndexVector[i].addDiagonalNeighbor(&particleIndexVector[neighborParticleIndex]);
+                        }
+                    }
+                }
+            }
+        }
+        spdlog::info(particleIndexVector[i].toString());
+        for(int j = 0; j < particleIndexVector[i].getDirectNeighbors().size(); j++){
+            spdlog::info(particleIndexVector[i].getDirectNeighbors()[j]->toString());
+        }
+        for(int j = 0; j < particleIndexVector[i].getDiagonalNeighbors().size(); j++){
+            spdlog::info(particleIndexVector[i].getDiagonalNeighbors()[j]->toString());
         }
     }
 }

@@ -53,6 +53,14 @@ private:
 
   double sigma;
 
+  std::vector<Particle*> directNeighbors;
+
+  std::vector<Particle*> diagonalNeighbors;
+
+  double avgBondLength;
+
+  int stiffnessFactor;
+
 public:
   explicit Particle(int type = 0);
 
@@ -64,11 +72,13 @@ public:
       std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
       int type = 0);
 
-    Particle(
+  Particle(
             // for visualization, we need always 3 coordinates
             // -> in case of 2d, we use only the first and the second
             std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig,
             int type = 0);
+
+  Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0, double avgBondLength_arg, int stiffnessFactor_arg);
 
   virtual ~Particle();
 
@@ -135,6 +145,15 @@ void updateF(const std::array<double, 3> &f_arg);
  * @return nlohmann::json object representing a particle
  */
 nlohmann::ordered_json json();
+
+void addDirectNeighbor(Particle *neighbor);
+
+void addDiagonalNeighbor(Particle *neighbor);
+
+std::vector<Particle *> &getDirectNeighbors();
+
+std::vector<Particle *> &getDiagonalNeighbors();
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
+

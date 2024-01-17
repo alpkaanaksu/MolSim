@@ -186,6 +186,18 @@ void Simulation::run() {
     // Calculate initial force to avoid starting with 0 force
     particles->applyToAllPairsOnce(force);
 
+    particles->applyToAll([](Particle &p) {
+        for (const auto &neighbor : p.getDirectNeighbors()) {
+            spdlog::info(p.toString() + " -> " + neighbor->toString());
+        }
+        for (const auto &neighbor : p.getDiagonalNeighbors()) {
+            spdlog::info(p.toString() + " -> " + neighbor->toString());
+        }
+    });
+
+
+
+
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
         thermostat.initializeTemperature(*particles);

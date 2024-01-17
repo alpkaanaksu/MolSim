@@ -86,7 +86,7 @@ public:
      *
      * @return Internal particle vector
      */
-    const std::vector<Particle> &getParticles() const;
+    std::vector<Particle> &getParticles();
 
     virtual void applyToAllHalo(const std::function<void(Particle &)> &function);
 

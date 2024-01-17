@@ -30,10 +30,10 @@
     {
       "type": "cuboid",
       "type_id": 1,
-      "position": [0.6, 2, 0.5],
+      "position": [0, 0, 0],
       "velocity": [0, 0, 0],
-      "size": [50, 14, 1],
-      "mesh_width": 1.2,
+      "size": [4, 4, 1],
+      "mesh_width": 1,
       "mass": 1,
       "sigma": 1,
       "epsilon": 1
@@ -41,10 +41,10 @@
     {
       "type": "cuboid",
       "type_id": 2,
-      "position": [0.6, 19, 0.5],
+      "position": [15, 15, 1],
       "velocity": [0, 0, 0],
-      "size": [50, 14, 1],
-      "mesh_width": 1.2,
+      "size": [1, 1, 1],
+      "mesh_width": 1,
       "mass": 2,
       "sigma": 0.9412,
       "epsilon": 1

@@ -112,7 +112,7 @@ void ParticleContainer::remove(Particle &particle) {
     }
 }
 
-const std::vector<Particle> &ParticleContainer::getParticles() const {
+std::vector<Particle> &ParticleContainer::getParticles() {
     return particles;
 }
 
