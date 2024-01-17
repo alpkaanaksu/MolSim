@@ -79,6 +79,9 @@ void ParticleContainer::add(const nlohmann::json &objects) {
         } else if (object["type"] == "membrane") {
             Generator::membrane(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
                               object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["avg_bond_length"], object["stiffness_factor"]);
+        } else {
+            spdlog::error("Unknown object type: " + object["type"].get<std::string>());
+            exit(-1);
         }
     }
 }
