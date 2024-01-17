@@ -210,24 +210,26 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
 
         for (auto &particle : cells[cellIndex]) {
             for(auto &neighborParticle : particle.getDirectNeighbors()) {
-                if (&particle < &neighborParticle) {
-                    double membraneForce = 0.0;
-                    membraneForce = particle.getStiffnessFactor() * (neighborParticle.distanceTo(particle) - particle.getAvgBondLength())
-                            * particle.diffTo(neighborParticle) / neighborParticle.distanceTo(particle);
+                if (&particle < neighborParticle) {
+                    std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
+
+                    membraneForce = particle.getStiffnessFactor() * (neighborParticle->distanceTo(particle) - particle.getAvgBondLength())
+                            * (1/neighborParticle->distanceTo(particle)) * particle.diffTo(*neighborParticle);
 
                     particle.setF(particle.getF() + membraneForce);
-                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    neighborParticle->setF(neighborParticle->getF() - membraneForce);
                 }
             }
 
             for(auto &neighborParticle : particle.getDiagonalNeighbors()) {
-                if (&particle < &neighborParticle) {
-                    double membraneForce = 0.0;
-                    membraneForce = particle.getStiffnessFactor() * (neighborParticle.distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
-                                    * particle.diffTo(neighborParticle) / neighborParticle.distanceTo(particle);
+                if (&particle < neighborParticle) {
+                    std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
+
+                    membraneForce = particle.getStiffnessFactor() * (neighborParticle->distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
+                            * (1/neighborParticle->distanceTo(particle)) * particle.diffTo(*neighborParticle);
 
                     particle.setF(particle.getF() + membraneForce);
-                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    neighborParticle->setF(neighborParticle->getF() - membraneForce);
                 }
             }
         }
