@@ -43,6 +43,15 @@ Particle::Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg,
     spdlog::debug("Particle generated!");
 }
 
+Particle::Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg,
+                   std::array<double, 3> f_arg, std::array<double, 3> old_f_arg,
+                   double m_arg, double eps, double sig, int type_arg, double avgBondLength_arg, int stiffnessFactor_arg)
+        : x(x_arg), v(v_arg), m(m_arg), f(f_arg), old_f(old_f_arg),
+          type(type_arg), epsilon(eps), sigma(sig),
+          directNeighbors(), diagonalNeighbors(), avgBondLength(avgBondLength_arg), stiffnessFactor(stiffnessFactor_arg) {
+    spdlog::debug("Particle generated!");
+}
+
 
 Particle::~Particle() {
     spdlog::debug("Particle destructed!");
