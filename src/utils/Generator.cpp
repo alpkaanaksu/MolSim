@@ -86,12 +86,15 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
             }
         }
         spdlog::info(particleIndexVector[i].toString());
-        for(int j = 0; j < particleIndexVector[i].getDirectNeighbors().size(); j++){
-            spdlog::info(particleIndexVector[i].getDirectNeighbors()[j]->toString());
-        }
-        for(int j = 0; j < particleIndexVector[i].getDiagonalNeighbors().size(); j++){
-            spdlog::info(particleIndexVector[i].getDiagonalNeighbors()[j]->toString());
-        }
+        // for(int j = 0; j < particleIndexVector[i].getDirectNeighbors().size(); j++){
+        //     spdlog::info(particleIndexVector[i].getDirectNeighbors()[j]->toString());
+        // }
+        // for(int j = 0; j < particleIndexVector[i].getDiagonalNeighbors().size(); j++){
+        //     spdlog::info(particleIndexVector[i].getDiagonalNeighbors()[j]->toString());
+        // }
+
+        std::cout << "Direct Neighbors: " << particleIndexVector[i].getDirectNeighbors().size() << std::endl;
+        std::cout << "Diagonal Neighbors: " << particleIndexVector[i].getDiagonalNeighbors().size() << std::endl;
     }
 }
 

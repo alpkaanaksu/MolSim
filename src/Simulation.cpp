@@ -114,6 +114,8 @@ Simulation::Simulation(const std::string &filepath) {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
         model = Model::lennardJonesModel(deltaT);
+    } else if (definition["simulation"]["model"] == "membrane") {
+        model = Model::membraneModel(deltaT);
     }
 
     if (definition["simulation"].contains("thermostat")) {
@@ -178,6 +180,7 @@ void Simulation::run() {
         plotInterval = 30;
     }
 
+    std::array<double, 3> pullingForce = {0.0, 0.0, 0.8};
     auto resetForce = Model::resetForceFunction();
     auto force = model.forceFunction();
     auto position = model.positionFunction();
@@ -185,18 +188,6 @@ void Simulation::run() {
 
     // Calculate initial force to avoid starting with 0 force
     particles->applyToAllPairsOnce(force);
-
-    particles->applyToAll([](Particle &p) {
-        for (const auto &neighbor : p.getDirectNeighbors()) {
-            spdlog::info(p.toString() + " -> " + neighbor->toString());
-        }
-        for (const auto &neighbor : p.getDiagonalNeighbors()) {
-            spdlog::info(p.toString() + " -> " + neighbor->toString());
-        }
-    });
-
-
-
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
@@ -219,14 +210,21 @@ void Simulation::run() {
         if (linkedCellParticleContainer != nullptr) {
             // particles points to a LinkedCellParticleContainer
             linkedCellParticleContainer->applyToAll(position, true);
+
+            linkedCellParticleContainer->applyMembraneForceToAll();
         } else {
             particles->applyToAll(position);
         }
 
         // calculate new f
-        particles->applyToAll([&resetForce, this, &numberOfUpdates](Particle &p) {
+        particles->applyToAll([&resetForce, this, &numberOfUpdates, &pullingForce, &current_time](Particle &p) {
             resetForce(p);
             p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+
+            // Pull
+            if(current_time < 150 && p.isPulled()) {
+                p.setF(p.getF() + pullingForce);
+            }
             numberOfUpdates++;
         });
 

@@ -205,14 +205,14 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
 }
 
 void LinkedCellParticleContainer::applyMembraneForceToAll() {
-    std::array<double, 3> pullingForce = {0, 0, 0.8};
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
         for (auto &particle : cells[cellIndex]) {
-            if(particle.isPulled()) {
-                particle.setF(particle.getF() + pullingForce);
-            }
+            std::cout << "No of direct neighbors " << particle.getDirectNeighbors().size() << std::endl;
+
+            std::cout << "No of diagonal neighbors " << particle.getDiagonalNeighbors().size() << std::endl;
+            
             for(auto &neighborParticle : particle.getDirectNeighbors()) {
                 if (&particle < neighborParticle) {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};

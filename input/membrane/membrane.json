@@ -1,6 +1,6 @@
 {
     "simulation": {
-      "model": "lennard_jones",
+      "model": "membrane",
       "particle_container": {
         "type": "linked_cell",
         "dimensions": [148, 148, 148],
