@@ -5,6 +5,7 @@
 #include "Thermostat.h"
 #include <spdlog/spdlog.h>
 #include <cmath>
+#include "ArrayUtils.h"
 
 Thermostat::Thermostat() : targetTemperature(0.0),
                            maxTemperatureChange(0.0),
@@ -31,7 +32,6 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
             targetTemperature - currentTemperature);
 
     double newTemperature = currentTemperature + temperatureChange;
-
     double scalingFactor = std::sqrt(newTemperature / currentTemperature);
 
     // Check for zero temperature to avoid division by zero
@@ -48,13 +48,57 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
 }
 
 
+void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
+    // Calculate average velocity
+    std::array<double, 3> totalVelocity = {0.0, 0.0, 0.0};
+    // Amount of non-fixed particles
+    int N = 0;
+    particleContainer.applyToAll([&totalVelocity, &N](Particle &particle) {
+        if (!particle.isFixed()) {
+            totalVelocity = totalVelocity + particle.getV();
+            N++;
+        }
+    });
+
+    std::array<double, 3> averageVelocity = {0.0, 0.0, 0.0};
+    for (int i = 0; i < 3; ++i) {
+        averageVelocity[i] = totalVelocity[i] / N;
+    }
+
+    // Scale non-fixed particle velocities
+    double currentTemperature = getCurrentTemperature(particleContainer);
+    double temperatureChange = std::copysign(
+            std::min(std::abs(targetTemperature - currentTemperature), maxTemperatureChange),
+            targetTemperature - currentTemperature);
+
+    double newTemperature = currentTemperature + temperatureChange;
+    double scalingFactor = std::sqrt(newTemperature / currentTemperature);
+
+    // Check for zero temperature to avoid division by zero
+    if (currentTemperature == 0.0 && (std::isnan(scalingFactor) || std::isinf(scalingFactor))) {
+        spdlog::warn("Current temperature is zero. Velocity scaling is skipped.");
+        return;
+    }
+
+    particleContainer.applyToAll([&scalingFactor, &averageVelocity](Particle &p) {
+        if (!p.isFixed()) {
+            p.setV(averageVelocity + scalingFactor * (p.getV() - averageVelocity));
+        }
+    });
+
+}
+
+
 double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) const {
     double kineticEnergy = 0.0;
     particleContainer.applyToAll([&kineticEnergy](Particle &particle) {
-        double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
-                          particle.getV()[2] * particle.getV()[2];
+        if (!particle.isFixed()){
+            double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
+                              particle.getV()[2] * particle.getV()[2];
 
-        kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
+            kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
+        }
+
     });
 
     // We assume everything to be dimensionless, therefore kB = 1.

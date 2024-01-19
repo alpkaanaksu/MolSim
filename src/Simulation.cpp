@@ -109,6 +109,7 @@ Simulation::Simulation(const std::string &filepath) {
               : 0.0;
 
     particles->add(definition["objects"]);
+    fixedParticles = particles->containsFixedObject(definition["objects"]);
 
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
@@ -166,6 +167,8 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 
 void Simulation::run() {
     outputWriter::prepareOutputFolder(out);
+    spdlog::info("Fixed particles: {}", fixedParticles);
+
 
     double current_time = 0;
 
@@ -226,7 +229,12 @@ void Simulation::run() {
         iteration++;
 
         if (thermostat.getNumDimensions() != -1 && iteration % thermostat.getThermostatInterval() == 0) {
-            thermostat.scaleVelocities(*particles);
+            if (fixedParticles) {
+                thermostat.scaleVelocitiesWithAvg(*particles);
+            } else {
+                thermostat.scaleVelocities(*particles);
+            }
+
         }
 
 
