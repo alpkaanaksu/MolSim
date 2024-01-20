@@ -172,25 +172,25 @@ public:
 
     static Model membraneModel(double deltaT) {
         auto ljForce = [](Particle &p1, Particle &p2) {
-            double cutoffDistance = std::pow(2, -6) * p1.getSigma();
+            double cutoffDistance = std::pow(2, (1.0/6.0)) * p1.getSigma();
+            // Skip force calculation if beyond cutoff distance, Lennard-Jones only as repulsive force
 
-            if (p1.distanceTo(p2) > cutoffDistance) {
-                return; // Skip force calculation if beyond cutoff distance, Lennard-Jones only as repulsive force
+            if (p1.distanceTo(p2) <= cutoffDistance) {
+                auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
+                auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
+
+                auto distance = p2.distanceTo(p1);
+                auto distance6 = std::pow(distance, 6);
+                auto sigma6 = std::pow(sigma, 6);
+
+                auto nextForce = (-24 * epsilon / std::pow(distance,2))
+                                 * ((sigma6/distance6) - 2*(std::pow(sigma6,2)/std::pow(distance6,2)))
+                                 * p2.diffTo(p1);
+
+                p1.setF(p1.getF() + nextForce);
+                p2.setF(p2.getF() - nextForce);
+
             }
-
-            auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
-            auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
-
-            auto distance = p2.distanceTo(p1);
-            auto distance6 = std::pow(distance, 6);
-            auto sigma6 = std::pow(sigma, 6);
-
-            auto nextForce = (-24 * epsilon / std::pow(distance,2))
-                             * ((sigma6/distance6) - 2*(std::pow(sigma6,2)/std::pow(distance6,2)))
-                             * p2.diffTo(p1);
-
-            p1.setF(p1.getF() + nextForce);
-            p2.setF(p2.getF() - nextForce);
         };
 
         auto position = [deltaT](Particle &p) {
