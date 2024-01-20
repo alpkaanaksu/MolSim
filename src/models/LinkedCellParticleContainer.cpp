@@ -245,12 +245,20 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
 
         for (auto& particle : cells[cellIndex]) {
             function(particle);
+
+            std::cout << "Particle " << particle.getId() << " position: " << particle.getX()[0] << "  " << particle.getX()[1] << " " << particle.getX()[2] << std::endl;
+            std::cout << "Particle " << particle.getId() << " direct neighbors: " << std::endl;
+            for (int j = 0; j < particle.getDirectNeighbors().size(); j++) {
+                std::cout << "Particle " << refs[particle.getDirectNeighbors()[j]]->getId() << "   " << particle.getDirectNeighbors()[j] << std::endl;
+            }
         }
 
         if (updateCells) {
             updateParticleCell(cellIndex);
         }
     }
+
+
 
     updateHaloCells();
 }
@@ -591,6 +599,6 @@ BoundaryBehavior LinkedCellParticleContainer::getBoundaryBehaviorBack() const {
     return boundaryBehaviorBack;
 }
 
-std::map<int, Particle*> LinkedCellParticleContainer::getRefs() {
+std::unordered_map<int, Particle*> LinkedCellParticleContainer::getRefs() {
     return refs;
 }
