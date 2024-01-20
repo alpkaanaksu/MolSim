@@ -5,7 +5,7 @@
       "initial_temperature": 40,
       "interval": 10,
       "target_temperature": 40,
-      "dimension": 2,
+      "dimension": 3,
       "brownian": true
     },
     "particle_container": {
@@ -18,7 +18,7 @@
         "right": "outflow"
       }
     },
-    "end_time": 5,
+    "end_time": 20,
     "time_delta": 0.0005,
     "video_duration": 40,
     "frame_rate": 24,
