@@ -54,6 +54,7 @@ private:
     BoundaryBehavior boundaryBehaviorFront;
     BoundaryBehavior boundaryBehaviorBack;
 
+    std::unordered_map<int, Particle*> refs;
 public:
 
     /**

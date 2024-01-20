@@ -53,15 +53,17 @@ private:
 
   double sigma;
 
-  std::vector<Particle*> directNeighbors;
+  std::vector<int> directNeighbors;
 
-  std::vector<Particle*> diagonalNeighbors;
+  std::vector<int> diagonalNeighbors;
 
   double avgBondLength;
 
   int stiffnessFactor;
 
   bool pulled;
+
+  int id;
 
 public:
   explicit Particle(int type = 0);
@@ -148,20 +150,23 @@ void updateF(const std::array<double, 3> &f_arg);
  */
 nlohmann::ordered_json json();
 
-void addDirectNeighbor(Particle *neighbor);
+void addDirectNeighbor(int id);
 
-void addDiagonalNeighbor(Particle *neighbor);
+void addDiagonalNeighbor(int id);
 
-std::vector<Particle *> &getDirectNeighbors();
+std::vector<int> getDirectNeighbors();
 
-std::vector<Particle *> &getDiagonalNeighbors();
+std::vector<int> getDiagonalNeighbors();
 
 double getAvgBondLength();
 
 int getStiffnessFactor();
 
 bool isPulled();
+
+int getId();
+
+void setId(int id_arg);
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
-

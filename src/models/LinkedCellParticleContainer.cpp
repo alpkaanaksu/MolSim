@@ -209,31 +209,46 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
         for (auto &particle : cells[cellIndex]) {
-            std::cout << "No of direct neighbors " << particle.getDirectNeighbors().size() << std::endl;
+            //std::cout << "Particle id " << particle.getId() << std::endl;
+            //std::cout << "No of direct neighbors " << particle.getDirectNeighbors().size() << std::endl;
 
-            std::cout << "No of diagonal neighbors " << particle.getDiagonalNeighbors().size() << std::endl;
+            //std::cout << "No of diagonal neighbors " << particle.getDiagonalNeighbors().size() << std::endl;
             
-            for(auto &neighborParticle : particle.getDirectNeighbors()) {
-                if (&particle < neighborParticle) {
+            for(auto neighborParticleId : particle.getDirectNeighbors()) {
+                std::cout << "Neighbor id " << neighborParticleId << std::endl;
+
+                if (refs.find(neighborParticleId) == refs.end()) {
+                    std::cout << "Neighbor not found" << std::endl;
+                    continue;
+                } else {
+                    std::cout << "Neighbor found" << std::endl;
+                    std::cout << "Neighbor address " << static_cast<void*>(refs[neighborParticleId]) << std::endl;
+                    std::cout << "Before" << std::endl;
+                    std::cout << *refs[neighborParticleId] << std::endl;
+                    std::cout << "After" << std::endl;
+
+                }
+
+                if (particle.getId() < neighborParticleId) {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
 
-                    membraneForce = particle.getStiffnessFactor() * (neighborParticle->distanceTo(particle) - particle.getAvgBondLength())
-                            * (1/neighborParticle->distanceTo(particle)) * particle.diffTo(*neighborParticle);
+                    membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength())
+                            * (1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]);
 
                     particle.setF(particle.getF() + membraneForce);
-                    neighborParticle->setF(neighborParticle->getF() - membraneForce);
+                    refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
                 }
             }
 
-            for(auto &neighborParticle : particle.getDiagonalNeighbors()) {
-                if (&particle < neighborParticle) {
+            for(auto neighborParticleId : particle.getDiagonalNeighbors()) {
+                if (particle.getId() < neighborParticleId) {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
 
-                    membraneForce = particle.getStiffnessFactor() * (neighborParticle->distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
-                            * (1/neighborParticle->distanceTo(particle)) * particle.diffTo(*neighborParticle);
+                    membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
+                            * (1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]);
 
                     particle.setF(particle.getF() + membraneForce);
-                    neighborParticle->setF(neighborParticle->getF() - membraneForce);
+                    refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
                 }
             }
         }
@@ -271,6 +286,15 @@ void LinkedCellParticleContainer::add(const Particle &particle) {
 
 void LinkedCellParticleContainer::addParticleToCell(int cellIndex, const Particle &particle) {
     cells[cellIndex].push_back(particle);
+
+    if(!cells[cellIndex].empty()) {
+        // Get the pointer to the last element in the vector
+        Particle *particlePointer = &cells[cellIndex].back();
+
+        refs[particlePointer->getId()] = particlePointer;
+
+        spdlog::debug("Reference updated for particle with id {}, new pointer: {}", particlePointer->getId(), static_cast<void *>(particlePointer));
+    }
 }
 
 void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {

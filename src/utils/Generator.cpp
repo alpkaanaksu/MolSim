@@ -32,12 +32,14 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
 void Generator::membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
                        double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor) {
 
-    std::vector<Particle> particleIndexVector;
+    std::vector<Particle*> particleIndexVector;
+
+    int nextId = 0;
 
     for (int x = 0; x < size[0]; x++) {
         for (int y = 0; y < size[1]; y++) {
             for (int z = 0; z < size[2]; z++) {
-                Particle newParticle {
+                Particle* newParticle = new Particle {
                                     {
                                          position[0] + x * meshWidth,
                                          position[1] + y * meshWidth,
@@ -53,12 +55,15 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                                      (x == 17 && y == 24) || (x == 17 && y == 25) || (x == 18 && y == 24) || (x == 18 && y == 25)
                                      };
 
-                // Add the Particle to the container
-                container.add(newParticle);
+                newParticle->setId(nextId++);
+
                 particleIndexVector.push_back(newParticle);
             }
         }
     }
+
+    // particleIndexVector size
+    std::cout << "PRE Particle Index Vector Size: " << particleIndexVector.size() << std::endl;
 
     for (int i = 0; i < particleIndexVector.size(); i++) {
         for (int dx = -1; dx <= 1; dx++) {
@@ -77,24 +82,18 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
 
                     if (neighborParticleIndex >= 0 && neighborParticleIndex < particleIndexVector.size()) {
                         if (dx == 0 || dy == 0) {
-                            particleIndexVector[i].addDirectNeighbor(&particleIndexVector[neighborParticleIndex]);
+                            particleIndexVector[i]->addDirectNeighbor(neighborParticleIndex);
                         } else {
-                            particleIndexVector[i].addDiagonalNeighbor(&particleIndexVector[neighborParticleIndex]);
+                            particleIndexVector[i]->addDiagonalNeighbor(neighborParticleIndex);
                         }
                     }
                 }
             }
         }
-        spdlog::info(particleIndexVector[i].toString());
-        // for(int j = 0; j < particleIndexVector[i].getDirectNeighbors().size(); j++){
-        //     spdlog::info(particleIndexVector[i].getDirectNeighbors()[j]->toString());
-        // }
-        // for(int j = 0; j < particleIndexVector[i].getDiagonalNeighbors().size(); j++){
-        //     spdlog::info(particleIndexVector[i].getDiagonalNeighbors()[j]->toString());
-        // }
+    }
 
-        std::cout << "Direct Neighbors: " << particleIndexVector[i].getDirectNeighbors().size() << std::endl;
-        std::cout << "Diagonal Neighbors: " << particleIndexVector[i].getDiagonalNeighbors().size() << std::endl;
+    for (int i = 0; i < particleIndexVector.size(); i++) {
+        container.add(*particleIndexVector[i]);
     }
 }
 
