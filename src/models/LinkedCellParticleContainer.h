@@ -372,6 +372,7 @@ public:
 
     void applyMembraneForceToAll();
 
+    std::unordered_map<int, Particle*> getRefs();
 };
 
 

@@ -209,17 +209,13 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
         for (auto &particle : cells[cellIndex]) {
-            //std::cout << "Particle id " << particle.getId() << std::endl;
-            //std::cout << "No of direct neighbors " << particle.getDirectNeighbors().size() << std::endl;
 
-            //std::cout << "No of diagonal neighbors " << particle.getDiagonalNeighbors().size() << std::endl;
-            
             for(auto neighborParticleId : particle.getDirectNeighbors()) {
                 if (particle.getId() < neighborParticleId) {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
 
                     membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength())
-                            * (1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]);
+                            * ((1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]));
 
                     particle.setF(particle.getF() + membraneForce);
                     refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
@@ -231,7 +227,7 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
 
                     membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
-                            * (1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]);
+                            * ((1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]));
 
                     particle.setF(particle.getF() + membraneForce);
                     refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
@@ -593,4 +589,8 @@ BoundaryBehavior LinkedCellParticleContainer::getBoundaryBehaviorFront() const {
 
 BoundaryBehavior LinkedCellParticleContainer::getBoundaryBehaviorBack() const {
     return boundaryBehaviorBack;
+}
+
+std::map<int, Particle*> LinkedCellParticleContainer::getRefs() {
+    return refs;
 }

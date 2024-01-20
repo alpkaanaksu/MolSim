@@ -211,7 +211,6 @@ void Simulation::run() {
             // particles points to a LinkedCellParticleContainer
             linkedCellParticleContainer->applyToAll(position, true);
 
-            linkedCellParticleContainer->applyMembraneForceToAll();
         } else {
             particles->applyToAll(position);
         }

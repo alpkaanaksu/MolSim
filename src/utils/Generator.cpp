@@ -73,8 +73,8 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                     continue;
                 }
 
-                int nx = i / size[1] + dx;
-                int ny = i % size[1] + dy;
+                int nx = i % size[1] + dx;
+                int ny = i / size[1] + dy;
 
                 // Check if the neighbor is within the valid range
                 if (nx >= 0 && nx < size[0] && ny >= 0 && ny < size[1]) {
@@ -94,6 +94,20 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
 
     for (int i = 0; i < particleIndexVector.size(); i++) {
         container.add(*particleIndexVector[i]);
+    }
+
+    //print out all particles positions and their neighbors positions (not ids)
+    for (int i = 0; i < particleIndexVector.size(); i++) {
+        std::cout << std::endl;
+        std::cout << "Particle " << i << " position: " << particleIndexVector[i]->getX()[0] << " " << particleIndexVector[i]->getX()[1] << " " << particleIndexVector[i]->getX()[2] << std::endl;
+        std::cout << "Particle " << i << " direct neighbors: " << std::endl;
+        for (int j = 0; j < particleIndexVector[i]->getDirectNeighbors().size(); j++) {
+            std::cout << "Particle " << particleIndexVector[i]->getDirectNeighbors()[j] << " position: " << particleIndexVector[particleIndexVector[i]->getDirectNeighbors()[j]]->getX()[0] << " " << particleIndexVector[particleIndexVector[i]->getDirectNeighbors()[j]]->getX()[1] << " " << particleIndexVector[particleIndexVector[i]->getDirectNeighbors()[j]]->getX()[2] << std::endl;
+        }
+        std::cout << "Particle " << i << " diagonal neighbors: " << std::endl;
+        for (int j = 0; j < particleIndexVector[i]->getDiagonalNeighbors().size(); j++) {
+            std::cout << "Particle " << particleIndexVector[i]->getDiagonalNeighbors()[j] << " position: " << particleIndexVector[particleIndexVector[i]->getDiagonalNeighbors()[j]]->getX()[0] << " " << particleIndexVector[particleIndexVector[i]->getDiagonalNeighbors()[j]]->getX()[1] << " " << particleIndexVector[particleIndexVector[i]->getDiagonalNeighbors()[j]]->getX()[2] << std::endl;
+        }
     }
 }
 
