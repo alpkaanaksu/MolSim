@@ -217,7 +217,7 @@ void Simulation::run() {
         }
 
         // calculate new f
-        particles->applyToAll([&resetForce, this, &numberOfUpdates, &pullingForce, &current_time](Particle &p) {
+        particles->applyToAll([&resetForce, this, &numberOfUpdates, &pullingForce, &current_time, &linkedCellParticleContainer](Particle &p) {
             resetForce(p);
             p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
 
@@ -225,6 +225,12 @@ void Simulation::run() {
             if(current_time < 150 && p.isPulled()) {
                 p.setF(p.getF() + pullingForce);
             }
+
+            // If we are using a linked cell particle container, we need to apply the membrane force
+            if (linkedCellParticleContainer != nullptr) {
+                linkedCellParticleContainer->applyMembraneForceToAll();
+            }
+
             numberOfUpdates++;
         });
 

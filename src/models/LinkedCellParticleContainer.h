@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+#include <deque>
 #include <array>
 #include <list>
 #include <set>
@@ -39,7 +40,7 @@ private:
      * The vector that contains all the particles in the container
      */
 
-    std::vector<std::vector<Particle>> cells;
+    std::vector<std::deque<Particle>> cells;
 
     std::set<int> boundaryCellIndices;
 
@@ -204,7 +205,7 @@ public:
 
     double getDeltaT() const;
 
-    const std::vector<std::vector<Particle>> &getCells() const;
+    const std::vector<std::deque<Particle>> &getCells() const;
 
     const std::set<int> &getBoundaryCellIndices() const;
 

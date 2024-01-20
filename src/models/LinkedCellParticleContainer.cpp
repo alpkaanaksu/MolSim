@@ -40,7 +40,7 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
 
     int numberOfCells = xCells * yCells * zCells;
 
-    cells = std::vector<std::vector<Particle>>(numberOfCells);
+    cells = std::vector<std::deque<Particle>>(numberOfCells);
 
     isHaloCellVector = std::vector<bool>(numberOfCells, true);
 
@@ -215,20 +215,6 @@ void LinkedCellParticleContainer::applyMembraneForceToAll() {
             //std::cout << "No of diagonal neighbors " << particle.getDiagonalNeighbors().size() << std::endl;
             
             for(auto neighborParticleId : particle.getDirectNeighbors()) {
-                std::cout << "Neighbor id " << neighborParticleId << std::endl;
-
-                if (refs.find(neighborParticleId) == refs.end()) {
-                    std::cout << "Neighbor not found" << std::endl;
-                    continue;
-                } else {
-                    std::cout << "Neighbor found" << std::endl;
-                    std::cout << "Neighbor address " << static_cast<void*>(refs[neighborParticleId]) << std::endl;
-                    std::cout << "Before" << std::endl;
-                    std::cout << *refs[neighborParticleId] << std::endl;
-                    std::cout << "After" << std::endl;
-
-                }
-
                 if (particle.getId() < neighborParticleId) {
                     std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
 
@@ -569,7 +555,7 @@ double LinkedCellParticleContainer::getDeltaT() const {
     return deltaT;
 }
 
-const std::vector<std::vector<Particle>> &LinkedCellParticleContainer::getCells() const {
+const std::vector<std::deque<Particle>> &LinkedCellParticleContainer::getCells() const {
     return cells;
 }
 
