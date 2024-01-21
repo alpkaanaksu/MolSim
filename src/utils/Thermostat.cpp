@@ -30,7 +30,6 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
     double temperatureChange = std::copysign(
             std::min(std::abs(targetTemperature - currentTemperature), maxTemperatureChange),
             targetTemperature - currentTemperature);
-
     double newTemperature = currentTemperature + temperatureChange;
     double scalingFactor = std::sqrt(newTemperature / currentTemperature);
 
@@ -41,8 +40,8 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
     }
 
     particleContainer.applyToAll([&scalingFactor](Particle &p) {
-        if(!p.isFixed()){
-        p.setV(scalingFactor * p.getV());
+        if (!p.isFixed()) {
+            p.setV(scalingFactor * p.getV());
         }
     });
 }
@@ -59,18 +58,23 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
             N++;
         }
     });
+    std::array<double, 3> averageVelocity = (1.0 / N) * totalVelocity;
 
-    std::array<double, 3> averageVelocity = {0.0, 0.0, 0.0};
-    for (int i = 0; i < 3; ++i) {
-        averageVelocity[i] = totalVelocity[i] / N;
-    }
+    // calculate current temperature but only include non-fixed particles
+    double kineticEnergy = 0.0;
+    particleContainer.applyToAll([&kineticEnergy, &averageVelocity](Particle &p) {
+        if (!p.isFixed()) {
+            std::array<double, 3> vHat = p.getV() - averageVelocity;
+            double vSquared = vHat[0] * vHat[0] + vHat[1] * vHat[1] + vHat[2] * vHat[2];
+            kineticEnergy = kineticEnergy + (0.5 * p.getM() * vSquared);
+        }
+    });
+    double currentTemperature = 2 * kineticEnergy / (N * numDimensions);
 
     // Scale non-fixed particle velocities
-    double currentTemperature = getCurrentTemperature(particleContainer);
     double temperatureChange = std::copysign(
             std::min(std::abs(targetTemperature - currentTemperature), maxTemperatureChange),
             targetTemperature - currentTemperature);
-
     double newTemperature = currentTemperature + temperatureChange;
     double scalingFactor = std::sqrt(newTemperature / currentTemperature);
 
@@ -82,7 +86,8 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
 
     particleContainer.applyToAll([&scalingFactor, &averageVelocity](Particle &p) {
         if (!p.isFixed()) {
-            p.setV(averageVelocity + scalingFactor * (p.getV() - averageVelocity));
+            std::array<double, 3> vHat = p.getV() - averageVelocity;
+            p.setV(averageVelocity + (scalingFactor * vHat));
         }
     });
 
@@ -92,26 +97,21 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
 double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) const {
     double kineticEnergy = 0.0;
     particleContainer.applyToAll([&kineticEnergy](Particle &particle) {
-        if (!particle.isFixed()){
-            double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
-                              particle.getV()[2] * particle.getV()[2];
+        double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
+                          particle.getV()[2] * particle.getV()[2];
 
-            kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
-        }
-
+        kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
     });
-
-    // We assume everything to be dimensionless, therefore kB = 1.
     return 2 * kineticEnergy / (particleContainer.size() * numDimensions);
 }
 
 
 void Thermostat::initializeTemperature(ParticleContainer &particleContainer) {
     particleContainer.applyToAll([this](Particle &p) {
-        auto v = p.getV();
-        p.setV(p.getV() +
-               maxwellBoltzmannDistributedVelocity(std::sqrt(initialTemperature / p.getM()), numDimensions));
-
+        if (!p.isFixed()) {
+            p.setV(p.getV() +
+                   maxwellBoltzmannDistributedVelocity(std::sqrt(initialTemperature / p.getM()), numDimensions));
+        }
     });
 
 }

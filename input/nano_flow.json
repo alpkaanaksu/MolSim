@@ -5,7 +5,7 @@
       "initial_temperature": 40,
       "interval": 10,
       "target_temperature": 40,
-      "dimension": 2,
+      "dimension": 3,
       "brownian": true
     },
     "particle_container": {
@@ -63,5 +63,7 @@
       "epsilon": 1,
       "fixed": false
     }
+
+
   ]
 }

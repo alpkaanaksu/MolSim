@@ -53,7 +53,7 @@ void ParticleContainer::add(const Particle &particle) {
 
 bool ParticleContainer::containsFixedObject(const nlohmann::json &objects) {
     for (auto &object: objects) {
-        if (object.contains("fixed") && object["fixed"] == true){
+        if (object.contains("fixed") && object["fixed"] == true) {
             return true;
         }
     }
@@ -75,7 +75,7 @@ void ParticleContainer::add(const nlohmann::json &objects) {
             }
 
             add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"],
-                         object["sigma"], object["type_id"]});
+                         object["sigma"], object["type_id"], object["fixed"]});
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
                               object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
