@@ -69,7 +69,7 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
             kineticEnergy = kineticEnergy + (0.5 * p.getM() * vSquared);
         }
     });
-    double currentTemperature = 2 * kineticEnergy / (N * numDimensions);
+    double currentTemperature = 2 * kineticEnergy / (particleContainer.size() * numDimensions);
 
     // Scale non-fixed particle velocities
     double temperatureChange = std::copysign(
