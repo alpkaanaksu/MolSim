@@ -200,14 +200,12 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
             for (int j = i + 1; j < firstCell.size(); j++) {
                 Particle& neighborParticle = firstCell[j];
 
-                // Check if the pair has been processed before by comparing memory addresses
+                // Check if the pair has been processed before by comparing ids
                 if (currentParticle.getId() < neighborParticle.getId()) {
-                    if (
-                            !currentParticle.isDiagonalNeighbor(neighborParticle.getId()) &&
-                            !currentParticle.isDirectNeighbor(neighborParticle.getId())) {
-                        function(currentParticle, neighborParticle);
+                    function(currentParticle, neighborParticle);
+                }
 
-                    } else if (currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                if (currentParticle.isDirectNeighbor(neighborParticle.getId())) {
                         std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
                                                               (neighborParticle.distanceTo(currentParticle) -
                                                                currentParticle.getAvgBondLength()) *
@@ -216,7 +214,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
 
                         currentParticle.setF(currentParticle.getF() + membraneForce);
                         neighborParticle.setF(neighborParticle.getF() - membraneForce);
-                    } else if (currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
+                } else if (currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
                         std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
                                                               (neighborParticle.distanceTo(currentParticle) -
                                                                currentParticle.getAvgBondLength() * std::sqrt(2)) *
@@ -225,7 +223,6 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
 
                         currentParticle.setF(currentParticle.getF() + membraneForce);
                         neighborParticle.setF(neighborParticle.getF() - membraneForce);
-                    }
                 }
             }
         }
@@ -247,17 +244,19 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
                     for (auto &p1: firstCell) {
                         for (auto &p2: currentCell) {
                             // Check if the pair has been processed before by comparing ids
-                            if ((p1.getId() < p2.getId() || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius
-                            && !p1.isDiagonalNeighbor(p2.getId()) && !p1.isDirectNeighbor(p2.getId())) {
+                            if (p1.getId() < p2.getId() && p1.distanceTo(p2) <= cutoffRadius) {
                                 function(p1, p2);
-                            } else if (p1.getId() < p2.getId() && p1.isDirectNeighbor(p2.getId())) {
-                                std::array<double,3> membraneForce = p1.getStiffnessFactor() *
-                                                (p2.distanceTo(p1) - p1.getAvgBondLength()) *
-                                                ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
+                            }
+
+                            if (p1.isDirectNeighbor(p2.getId())) {
+                                std::array<double, 3> membraneForce = p1.getStiffnessFactor() *
+                                                                      (p2.distanceTo(p1) - p1.getAvgBondLength()) *
+                                                                      ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
 
                                 p1.setF(p1.getF() + membraneForce);
                                 p2.setF(p2.getF() - membraneForce);
-                            } else if (p1.getId() < p2.getId() && p1.isDiagonalNeighbor(p2.getId())) {
+
+                            } else if (p1.isDiagonalNeighbor(p2.getId())) {
                                 std::array<double,3> membraneForce = p1.getStiffnessFactor() *
                                                 (p2.distanceTo(p1) - p1.getAvgBondLength() * std::sqrt(2)) *
                                                 ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
