@@ -225,15 +225,14 @@ void Simulation::run() {
                 p.setF(p.getF() + pullingForce);
             }
 
-            // If we are using a linked cell particle container, we need to apply the membrane force
-            if (linkedCellParticleContainer != nullptr) {
-                linkedCellParticleContainer->applyMembraneForceToAll();
-            }
-
             numberOfUpdates++;
         });
 
-        particles->applyToAllPairsOnce(force);
+        if(linkedCellParticleContainer != nullptr){
+            linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+        } else {
+            particles->applyToAllPairsOnce(force);
+        }
 
         // calculate new v
         particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){

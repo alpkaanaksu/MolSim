@@ -175,7 +175,7 @@ public:
             double cutoffDistance = std::pow(2, (1.0/6.0)) * p1.getSigma();
             // Skip force calculation if beyond cutoff distance, Lennard-Jones only as repulsive force
 
-            if (p1.distanceTo(p2) <= cutoffDistance) {
+            if (p1.distanceTo(p2) <= cutoffDistance && !p1.isDirectNeighbor(p2.getId()) && !p1.isDiagonalNeighbor(p2.getId())) {
                 auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
                 auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
 
@@ -189,7 +189,6 @@ public:
 
                 p1.setF(p1.getF() + nextForce);
                 p2.setF(p2.getF() - nextForce);
-
             }
         };
 

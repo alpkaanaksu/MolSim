@@ -40,7 +40,7 @@ private:
      * The vector that contains all the particles in the container
      */
 
-    std::vector<std::deque<Particle>> cells;
+    std::vector<std::vector<Particle>> cells;
 
     std::set<int> boundaryCellIndices;
 
@@ -55,7 +55,6 @@ private:
     BoundaryBehavior boundaryBehaviorFront;
     BoundaryBehavior boundaryBehaviorBack;
 
-    std::unordered_map<int, Particle*> refs;
 public:
 
     /**
@@ -205,7 +204,7 @@ public:
 
     double getDeltaT() const;
 
-    const std::vector<std::deque<Particle>> &getCells() const;
+    const std::vector<std::vector<Particle>> &getCells() const;
 
     const std::set<int> &getBoundaryCellIndices() const;
 
@@ -370,9 +369,7 @@ public:
     */
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
-    void applyMembraneForceToAll();
-
-    std::unordered_map<int, Particle*> getRefs();
+    void applyToAllPairsOnceMembrane(const std::function<void(Particle &, Particle &)> &function);
 };
 
 

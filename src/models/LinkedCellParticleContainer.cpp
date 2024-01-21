@@ -40,7 +40,7 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
 
     int numberOfCells = xCells * yCells * zCells;
 
-    cells = std::vector<std::deque<Particle>>(numberOfCells);
+    cells = std::vector<std::vector<Particle>>(numberOfCells);
 
     isHaloCellVector = std::vector<bool>(numberOfCells, true);
 
@@ -184,6 +184,93 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     }
 }
 
+void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::function<void(Particle&, Particle&)>& function) {
+    // Iterate through all cells in the container
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        // Skip halo cells
+        if (!isHaloCellVector[cellIndex]) continue;
+
+        auto coords = index1dTo3d(cellIndex);
+        auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
+
+        // Iterate through all pairs of particles in the same cell
+        for (int i = 0; i < firstCell.size(); i++) {
+            Particle& currentParticle = firstCell[i];
+
+            for (int j = i + 1; j < firstCell.size(); j++) {
+                Particle& neighborParticle = firstCell[j];
+
+                // Check if the pair has been processed before by comparing memory addresses
+                if (&currentParticle < &neighborParticle &&
+                    !currentParticle.isDiagonalNeighbor(neighborParticle.getId()) &&
+                    !currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                    function(currentParticle, neighborParticle);
+
+                } else if (currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                    std::array<double,3> membraneForce = currentParticle.getStiffnessFactor() *
+                                    (neighborParticle.distanceTo(currentParticle) - currentParticle.getAvgBondLength()) *
+                                    ((1 / neighborParticle.distanceTo(currentParticle)) * currentParticle.diffTo(neighborParticle));
+
+                    currentParticle.setF(currentParticle.getF() + membraneForce);
+                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                } else if (currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
+                    std::array<double,3> membraneForce = currentParticle.getStiffnessFactor() *
+                                    (neighborParticle.distanceTo(currentParticle) - currentParticle.getAvgBondLength() * std::sqrt(2)) *
+                                    ((1 / neighborParticle.distanceTo(currentParticle)) * currentParticle.diffTo(neighborParticle));
+
+                    currentParticle.setF(currentParticle.getF() + membraneForce);
+                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                }
+            }
+        }
+
+
+        // Iterate through neighboring cells
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    int neighborX = coords[0] + x;
+                    int neighborY = coords[1] + y;
+                    int neighborZ = coords[2] + z;
+
+                    /*if (neighborX <= 0 || neighborX >= xCells - 1
+                        || neighborY <= 0 || neighborY >= yCells - 1
+                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
+
+                    if (x == 0 && y == 0 && z == 0) continue;
+
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
+
+                    for (auto &p1: firstCell) {
+                        for (auto &p2: currentCell) {
+                            // Check if the pair has been processed before by comparing memory addresses
+                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius
+                            && !p1.isDiagonalNeighbor(p2.getId()) && !p1.isDirectNeighbor(p2.getId())) {
+                                function(p1, p2);
+                            } else if (p1.isDirectNeighbor(p2.getId())) {
+                                std::array<double,3> membraneForce = p1.getStiffnessFactor() *
+                                                (p2.distanceTo(p1) - p1.getAvgBondLength()) *
+                                                ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
+
+                                p1.setF(p1.getF() + membraneForce);
+                                p2.setF(p2.getF() - membraneForce);
+                            } else if (p1.isDiagonalNeighbor(p2.getId())) {
+                                std::array<double,3> membraneForce = p1.getStiffnessFactor() *
+                                                (p2.distanceTo(p1) - p1.getAvgBondLength() * std::sqrt(2)) *
+                                                ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
+
+                                p1.setF(p1.getF() + membraneForce);
+                                p2.setF(p2.getF() - membraneForce);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
@@ -204,39 +291,6 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
     }
 }
 
-void LinkedCellParticleContainer::applyMembraneForceToAll() {
-    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
-        if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
-
-        for (auto &particle : cells[cellIndex]) {
-
-            for(auto neighborParticleId : particle.getDirectNeighbors()) {
-                if (particle.getId() < neighborParticleId) {
-                    std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
-
-                    membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength())
-                            * ((1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]));
-
-                    particle.setF(particle.getF() + membraneForce);
-                    refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
-                }
-            }
-
-            for(auto neighborParticleId : particle.getDiagonalNeighbors()) {
-                if (particle.getId() < neighborParticleId) {
-                    std::array<double, 3> membraneForce = {0.0, 0.0, 0.0};
-
-                    membraneForce = particle.getStiffnessFactor() * (refs[neighborParticleId]->distanceTo(particle) - particle.getAvgBondLength() * std::sqrt(2))
-                            * ((1/refs[neighborParticleId]->distanceTo(particle)) * particle.diffTo(*refs[neighborParticleId]));
-
-                    particle.setF(particle.getF() + membraneForce);
-                    refs[neighborParticleId]->setF(refs[neighborParticleId]->getF() - membraneForce);
-                }
-            }
-        }
-    }
-}
-
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
     deleteParticlesInHaloCells();
 
@@ -245,20 +299,12 @@ void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)
 
         for (auto& particle : cells[cellIndex]) {
             function(particle);
-
-            std::cout << "Particle " << particle.getId() << " position: " << particle.getX()[0] << "  " << particle.getX()[1] << " " << particle.getX()[2] << std::endl;
-            std::cout << "Particle " << particle.getId() << " direct neighbors: " << std::endl;
-            for (int j = 0; j < particle.getDirectNeighbors().size(); j++) {
-                std::cout << "Particle " << refs[particle.getDirectNeighbors()[j]]->getId() << "   " << particle.getDirectNeighbors()[j] << std::endl;
-            }
         }
 
         if (updateCells) {
             updateParticleCell(cellIndex);
         }
     }
-
-
 
     updateHaloCells();
 }
@@ -276,15 +322,6 @@ void LinkedCellParticleContainer::add(const Particle &particle) {
 
 void LinkedCellParticleContainer::addParticleToCell(int cellIndex, const Particle &particle) {
     cells[cellIndex].push_back(particle);
-
-    if(!cells[cellIndex].empty()) {
-        // Get the pointer to the last element in the vector
-        Particle *particlePointer = &cells[cellIndex].back();
-
-        refs[particlePointer->getId()] = particlePointer;
-
-        spdlog::debug("Reference updated for particle with id {}, new pointer: {}", particlePointer->getId(), static_cast<void *>(particlePointer));
-    }
 }
 
 void LinkedCellParticleContainer::updateParticleCell(int cellIndex) {
@@ -559,7 +596,7 @@ double LinkedCellParticleContainer::getDeltaT() const {
     return deltaT;
 }
 
-const std::vector<std::deque<Particle>> &LinkedCellParticleContainer::getCells() const {
+const std::vector<std::vector<Particle>> &LinkedCellParticleContainer::getCells() const {
     return cells;
 }
 
@@ -597,8 +634,4 @@ BoundaryBehavior LinkedCellParticleContainer::getBoundaryBehaviorFront() const {
 
 BoundaryBehavior LinkedCellParticleContainer::getBoundaryBehaviorBack() const {
     return boundaryBehaviorBack;
-}
-
-std::unordered_map<int, Particle*> LinkedCellParticleContainer::getRefs() {
-    return refs;
 }

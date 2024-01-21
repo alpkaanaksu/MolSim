@@ -172,3 +172,11 @@ int Particle::getId() {
 void Particle::setId(int id_arg) {
     id = id_arg;
 }
+
+bool Particle::isDirectNeighbor(int id) {
+    return std::find(directNeighbors.begin(), directNeighbors.end(), id) != directNeighbors.end();
+}
+
+bool Particle::isDiagonalNeighbor(int id) {
+    return std::find(diagonalNeighbors.begin(), diagonalNeighbors.end(), id) != diagonalNeighbors.end();
+}

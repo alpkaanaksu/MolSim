@@ -167,6 +167,10 @@ bool isPulled();
 int getId();
 
 void setId(int id_arg);
+
+bool isDirectNeighbor(int id);
+
+bool isDiagonalNeighbor(int id);
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);
