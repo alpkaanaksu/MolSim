@@ -201,25 +201,31 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
                 Particle& neighborParticle = firstCell[j];
 
                 // Check if the pair has been processed before by comparing memory addresses
-                if (&currentParticle < &neighborParticle &&
-                    !currentParticle.isDiagonalNeighbor(neighborParticle.getId()) &&
-                    !currentParticle.isDirectNeighbor(neighborParticle.getId())) {
-                    function(currentParticle, neighborParticle);
+                if (currentParticle.getId() < neighborParticle.getId()) {
+                    if (
+                            !currentParticle.isDiagonalNeighbor(neighborParticle.getId()) &&
+                            !currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                        function(currentParticle, neighborParticle);
 
-                } else if (currentParticle.isDirectNeighbor(neighborParticle.getId())) {
-                    std::array<double,3> membraneForce = currentParticle.getStiffnessFactor() *
-                                    (neighborParticle.distanceTo(currentParticle) - currentParticle.getAvgBondLength()) *
-                                    ((1 / neighborParticle.distanceTo(currentParticle)) * currentParticle.diffTo(neighborParticle));
+                    } else if (currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                        std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
+                                                              (neighborParticle.distanceTo(currentParticle) -
+                                                               currentParticle.getAvgBondLength()) *
+                                                              ((1 / neighborParticle.distanceTo(currentParticle)) *
+                                                               currentParticle.diffTo(neighborParticle));
 
-                    currentParticle.setF(currentParticle.getF() + membraneForce);
-                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
-                } else if (currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
-                    std::array<double,3> membraneForce = currentParticle.getStiffnessFactor() *
-                                    (neighborParticle.distanceTo(currentParticle) - currentParticle.getAvgBondLength() * std::sqrt(2)) *
-                                    ((1 / neighborParticle.distanceTo(currentParticle)) * currentParticle.diffTo(neighborParticle));
+                        currentParticle.setF(currentParticle.getF() + membraneForce);
+                        neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    } else if (currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
+                        std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
+                                                              (neighborParticle.distanceTo(currentParticle) -
+                                                               currentParticle.getAvgBondLength() * std::sqrt(2)) *
+                                                              ((1 / neighborParticle.distanceTo(currentParticle)) *
+                                                               currentParticle.diffTo(neighborParticle));
 
-                    currentParticle.setF(currentParticle.getF() + membraneForce);
-                    neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                        currentParticle.setF(currentParticle.getF() + membraneForce);
+                        neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    }
                 }
             }
         }
@@ -233,10 +239,6 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
                     int neighborY = coords[1] + y;
                     int neighborZ = coords[2] + z;
 
-                    /*if (neighborX <= 0 || neighborX >= xCells - 1
-                        || neighborY <= 0 || neighborY >= yCells - 1
-                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
-
                     if (x == 0 && y == 0 && z == 0) continue;
 
                     int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
@@ -244,18 +246,18 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
 
                     for (auto &p1: firstCell) {
                         for (auto &p2: currentCell) {
-                            // Check if the pair has been processed before by comparing memory addresses
-                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius
+                            // Check if the pair has been processed before by comparing ids
+                            if ((p1.getId() < p2.getId() || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius
                             && !p1.isDiagonalNeighbor(p2.getId()) && !p1.isDirectNeighbor(p2.getId())) {
                                 function(p1, p2);
-                            } else if (p1.isDirectNeighbor(p2.getId())) {
+                            } else if (p1.getId() < p2.getId() && p1.isDirectNeighbor(p2.getId())) {
                                 std::array<double,3> membraneForce = p1.getStiffnessFactor() *
                                                 (p2.distanceTo(p1) - p1.getAvgBondLength()) *
                                                 ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
 
                                 p1.setF(p1.getF() + membraneForce);
                                 p2.setF(p2.getF() - membraneForce);
-                            } else if (p1.isDiagonalNeighbor(p2.getId())) {
+                            } else if (p1.getId() < p2.getId() && p1.isDiagonalNeighbor(p2.getId())) {
                                 std::array<double,3> membraneForce = p1.getStiffnessFactor() *
                                                 (p2.distanceTo(p1) - p1.getAvgBondLength() * std::sqrt(2)) *
                                                 ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
