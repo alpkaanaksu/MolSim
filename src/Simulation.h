@@ -32,6 +32,7 @@ private:
     std::queue<double> checkpoints;
     double gravity;
     Thermostat thermostat;
+    bool membrane = false;
 
 public:
     /**

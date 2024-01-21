@@ -116,6 +116,7 @@ Simulation::Simulation(const std::string &filepath) {
         model = Model::lennardJonesModel(deltaT);
     } else if (definition["simulation"]["model"] == "membrane") {
         model = Model::membraneModel(deltaT);
+        membrane = true;
     }
 
     if (definition["simulation"].contains("thermostat")) {
@@ -167,6 +168,8 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 }
 
 void Simulation::run() {
+    auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
+
     outputWriter::prepareOutputFolder(out);
 
     double current_time = 0;
@@ -187,7 +190,11 @@ void Simulation::run() {
     auto velocity = model.velocityFunction();
 
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
+    if (membrane && linkedCellParticleContainer != nullptr) {
+        linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+    } else {
+        particles->applyToAllPairsOnce(force);
+    }
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
@@ -205,7 +212,6 @@ void Simulation::run() {
     while (current_time <= endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
-        auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
 
         if (linkedCellParticleContainer != nullptr) {
             // particles points to a LinkedCellParticleContainer
@@ -228,11 +234,13 @@ void Simulation::run() {
             numberOfUpdates++;
         });
 
-        if(linkedCellParticleContainer != nullptr){
+        if (membrane && linkedCellParticleContainer != nullptr) {
             linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
         } else {
-            particles->applyToAllPairsOnce(force);
+            linkedCellParticleContainer->applyToAllPairsOnce(force);
         }
+        
+    
 
         // calculate new v
         particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
@@ -264,8 +272,8 @@ void Simulation::run() {
 
         double percentage = current_time / endTime * 100;
 
-        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time / endTime * 100
-                  << "% ] " << "\r" << std::flush;
+        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time << " (" << current_time / endTime * 100
+                  << "%) ] " << "\r" << std::flush;
 
         current_time += deltaT;
     }
