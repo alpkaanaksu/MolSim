@@ -46,30 +46,42 @@ void Thermostat::scaleVelocities(ParticleContainer &particleContainer) {
     });
 }
 
-
-void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
+std::array<double, 3> Thermostat::getAverageVelocity(ParticleContainer &particleContainer) {
     // Calculate average velocity
-    std::array<double, 3> totalVelocity = {0.0, 0.0, 0.0};
+    std::array<double, 3> averageVelocity = {0.0, 0.0, 0.0};
     // Amount of non-fixed particles
     int N = 0;
-    particleContainer.applyToAll([&totalVelocity, &N](Particle &particle) {
+    particleContainer.applyToAll([&averageVelocity, &N](Particle &particle) {
         if (!particle.isFixed()) {
-            totalVelocity = totalVelocity + particle.getV();
+            averageVelocity = averageVelocity + particle.getV();
             N++;
         }
     });
-    std::array<double, 3> averageVelocity = (1.0 / N) * totalVelocity;
+    averageVelocity = (1.0 / N) * averageVelocity;
+    return averageVelocity;
+}
 
+double Thermostat::getCurrentTemperatureDynamic(ParticleContainer &particleContainer, std::array<double, 3> averageVelocity) {
     // calculate current temperature but only include non-fixed particles
     double kineticEnergy = 0.0;
-    particleContainer.applyToAll([&kineticEnergy, &averageVelocity](Particle &p) {
+    int N = 0;
+
+    particleContainer.applyToAll([&kineticEnergy, &averageVelocity, &N](Particle &p) {
         if (!p.isFixed()) {
             std::array<double, 3> vHat = p.getV() - averageVelocity;
-            double vSquared = vHat[0] * vHat[0] + vHat[1] * vHat[1] + vHat[2] * vHat[2];
-            kineticEnergy = kineticEnergy + (0.5 * p.getM() * vSquared);
+            kineticEnergy =
+                    kineticEnergy + (p.getM() * (vHat[0] * vHat[0] + vHat[1] * vHat[1] + vHat[2] * vHat[2]) * 0.5);
+            N++;
         }
     });
-    double currentTemperature = 2 * kineticEnergy / (particleContainer.size() * numDimensions);
+    //todo N or particleContainer.size()?
+    double currentTemperature = 2 * kineticEnergy / (N * numDimensions);
+    return currentTemperature;
+}
+
+void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
+    std::array<double, 3> averageVelocity = getAverageVelocity(particleContainer);
+    double currentTemperature = getCurrentTemperatureDynamic(particleContainer, averageVelocity);
 
     // Scale non-fixed particle velocities
     double temperatureChange = std::copysign(
@@ -86,8 +98,7 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
 
     particleContainer.applyToAll([&scalingFactor, &averageVelocity](Particle &p) {
         if (!p.isFixed()) {
-            std::array<double, 3> vHat = p.getV() - averageVelocity;
-            p.setV(averageVelocity + (scalingFactor * vHat));
+            p.setV(averageVelocity + scalingFactor * (p.getV() - averageVelocity));
         }
     });
 
@@ -97,10 +108,12 @@ void Thermostat::scaleVelocitiesWithAvg(ParticleContainer &particleContainer) {
 double Thermostat::getCurrentTemperature(ParticleContainer &particleContainer) const {
     double kineticEnergy = 0.0;
     particleContainer.applyToAll([&kineticEnergy](Particle &particle) {
-        double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
-                          particle.getV()[2] * particle.getV()[2];
+        if (!particle.isFixed()) {
+            double vSquared = particle.getV()[0] * particle.getV()[0] + particle.getV()[1] * particle.getV()[1] +
+                              particle.getV()[2] * particle.getV()[2];
 
-        kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
+            kineticEnergy = kineticEnergy + (0.5 * particle.getM() * vSquared);
+        }
     });
     return 2 * kineticEnergy / (particleContainer.size() * numDimensions);
 }

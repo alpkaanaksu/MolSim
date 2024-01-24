@@ -71,6 +71,11 @@ public:
      */
     double getCurrentTemperature(ParticleContainer &particleContainer) const;
 
+
+    std::array<double, 3> getAverageVelocity(ParticleContainer &particleContainer);
+
+    double getCurrentTemperatureDynamic(ParticleContainer &particleContainer, std::array<double, 3>  averageVelocity);
+
     double getInitialTemperature() const;
 
     double getTargetTemperature() const;

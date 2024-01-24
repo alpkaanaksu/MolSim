@@ -139,6 +139,9 @@ public:
             auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
 
             auto distance = p2.distanceTo(p1);
+            //todo remove later
+            distance = std::max(distance, 0.1);
+
             auto distance6 = std::pow(distance, 6);
             auto sigma6 = std::pow(sigma, 6);
 
