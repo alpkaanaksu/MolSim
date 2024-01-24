@@ -147,7 +147,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
         for (int i = 0; i < firstCell.size(); i++) {
             for (int j = i + 1; j < firstCell.size(); j++) {
                 // Check if the pair has been processed before by comparing memory addresses
-                if (&firstCell[i] < &firstCell[j]) {
+                if (&firstCell[i] < &firstCell[j] &&  firstCell[i].distanceTo(firstCell[j]) <= cutoffRadius) {
                     function(firstCell[i], firstCell[j]);
                 }
             }

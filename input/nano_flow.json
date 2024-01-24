@@ -6,7 +6,7 @@
       "interval": 10,
       "target_temperature": 40,
       "dimension": 3,
-      "brownian": true
+      "brownian": false
     },
     "particle_container": {
       "type": "linked_cell",
