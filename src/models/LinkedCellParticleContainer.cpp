@@ -204,7 +204,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
                 if (&currentParticle < &neighborParticle &&
                         !currentParticle.isDirectNeighbor(neighborParticle.getId()) && !currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
                     function(currentParticle, neighborParticle);
-                    spdlog::info("Lennard Jones1: Current particle force ({} {}): {}, {}, {}", currentParticle.getId(), neighborParticle.getId(), currentParticle.getF()[0], currentParticle.getF()[1], currentParticle.getF()[2]);
+                    //spdlog::info("Lennard Jones1: Current particle force ({} {}): {}, {}, {}", currentParticle.getId(), neighborParticle.getId(), currentParticle.getF()[0], currentParticle.getF()[1], currentParticle.getF()[2]);
                 } else if (&currentParticle < &neighborParticle &&
                     currentParticle.isDirectNeighbor(neighborParticle.getId())) {
                         std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
@@ -251,7 +251,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::functio
                             if (&p1 < &p2 && p1.distanceTo(p2) <= cutoffRadius &&
                                     !p1.isDirectNeighbor(p2.getId()) && !p1.isDiagonalNeighbor(p2.getId())) {
                                 function(p1, p2);
-                                spdlog::info("Lennard Jones2 ({} {}): Current particle force: {}, {}, {}",p1.getId(), p2.getId(), p1.getF()[0], p1.getF()[1], p1.getF()[2]);
+                                //spdlog::info("Lennard Jones2 ({} {}): Current particle force: {}, {}, {}",p1.getId(), p2.getId(), p1.getF()[0], p1.getF()[1], p1.getF()[2]);
                             } else if (&p1 < &p2 && p1.isDirectNeighbor(p2.getId())) {
                                 std::array<double, 3> membraneForce = p1.getStiffnessFactor() *
                                                                       (p2.distanceTo(p1) - p1.getAvgBondLength()) *

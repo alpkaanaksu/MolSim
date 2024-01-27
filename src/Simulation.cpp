@@ -183,7 +183,7 @@ void Simulation::run() {
         plotInterval = 30;
     }
 
-    std::array<double, 3> pullingForce = {0.0, 0.0, 0.8};
+    std::array<double, 3> pullingForce = {0.0, 0.8, 0.0};
     auto resetForce = Model::resetForceFunction();
     auto force = model.forceFunction();
     auto position = model.positionFunction();

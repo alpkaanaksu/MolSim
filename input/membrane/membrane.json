@@ -7,7 +7,7 @@
         "cutoff_radius": 4,
         "boundary": {
           "all": "outflow",
-          "back": "reflective"
+          "bottom": "reflective"
         }
       },
       "end_time": 500,
@@ -24,7 +24,7 @@
         "type_id": 1,
         "position": [15, 15, 1.5],
         "velocity": [0, 0, 0],
-        "size": [50, 50, 1],
+        "size": [50, 1, 50],
         "mesh_width": 2.2,
         "mass": 1,
         "sigma": 1,
