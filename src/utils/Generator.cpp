@@ -37,8 +37,8 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
     int nextId = 0;
 
     for (int x = 0; x < size[0]; x++) {
-        for (int y = 0; y < size[1]; y++) {
-            for (int z = 0; z < size[2]; z++) {
+        for (int z = 0; z < size[2]; z++) {
+            for (int y = 0; y < size[1]; y++) {
                 Particle* newParticle = new Particle {
                         {
                                 position[0] + x * meshWidth,
@@ -57,21 +57,21 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                 };
 
                 for (int dx = -1; dx <= 1; dx++) {
-                    for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
                         // Skip the current particle
-                        if (dx == 0 && dy == 0) {
+                        if (dx == 0 && dz == 0) {
                             continue;
                         }
 
-                        int nx = nextId % size[1] + dx;
-                        int ny = nextId / size[1] + dy;
+                        int nx = nextId % size[0] + dx;
+                        int nz = nextId / size[0] + dz;
 
                         // Check if the neighbor is within the valid range
-                        if (nx >= 0 && nx < size[0] && ny >= 0 && ny < size[1]) {
-                            int neighborParticleIndex = ny * size[0] + nx;
+                        if (nx >= 0 && nx < size[0] && nz >= 0 && nz < size[2]) {
+                            int neighborParticleIndex = nz * size[0] + nx;
 
-                            if (neighborParticleIndex >= 0 && neighborParticleIndex < (size[0] * size[1])) {
-                                if (dx == 0 || dy == 0) {
+                            if (neighborParticleIndex >= 0 && neighborParticleIndex < (size[0] * size[2])) {
+                                if (dx == 0 || dz == 0) {
                                     newParticle->addDirectNeighbor(neighborParticleIndex);
                                 } else {
                                     newParticle->addDiagonalNeighbor(neighborParticleIndex);
