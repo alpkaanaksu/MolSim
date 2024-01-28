@@ -269,22 +269,54 @@ public:
      */
     void handlePeriodicBoundary(Particle &particle);
 
+    /**
+     * @brief Handles periodic boundary conditions for a single axis.
+     *
+     * Copies particles from a boundary cell to the corresponding halo cell along the specified axis.
+     *
+     * @param boundaryCellIndex Index of the boundary cell to be handled.
+     * @param axisIndex Axis along which the boundary condition is applied (0 for x, 1 for y, 2 for z).
+     * @param isLowerHalo Indicates whether it is the lower halo cell (true) or upper halo cell (false).
+     */
     void handleBoundariesOneAxis(int boundaryCellIndex, int axisIndex, bool isLowerHalo);
 
+    /**
+     * @brief Handles periodic boundary conditions for two axes simultaneously.
+     *
+     * Copies particles from a boundary cell to the corresponding halo cell along the specified axes. Useful when 2 of the
+     * 3 axes have periodic boundary conditions.
+     *
+     * @param boundaryCellIndex Index of the boundary cell to be handled.
+     * @param axisIndex1 First axis along which the boundary condition is applied.
+     * @param axisIndex2 Second axis along which the boundary condition is applied.
+     * @param isLowerHalo1 Indicates whether it is the lower halo cell for the first axis (true) or upper halo cell (false).
+     * @param isLowerHalo2 Indicates whether it is the lower halo cell for the second axis (true) or upper halo cell (false).
+     */
     void handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2);
 
+    /**
+     * @brief Handles periodic boundary conditions for three axes simultaneously.
+     *
+     * Copies particles from a boundary cell to the corresponding halo cell along the specified axes. Useful when all 3
+     * axes have periodic boundary conditions.
+     *
+     * @param boundaryCellIndex Index of the boundary cell to be handled.
+     * @param isLowerHalo1 Indicates whether it is the lower halo cell for the first axis (true) or upper halo cell (false).
+     * @param isLowerHalo2 Indicates whether it is the lower halo cell for the second axis (true) or upper halo cell (false).
+     * @param isLowerHalo3 Indicates whether it is the lower halo cell for the third axis (true) or upper halo cell (false).
+     */
     void handleBoundariesThreeAxes(int boundaryCellIndex, bool isLowerHalo1, bool isLowerHalo2, bool isLowerHalo3);
 
-        /**
-        * @brief Updates the halo cells based on the current state of the boundary cells inside the particle container.
-        *
-        * This method ensures that the halo cells reflect the current state of the boundary cells and are
-        * synchronized with changes in the simulation domain (boundary cells). It utilizes two specialized
-        * methods: upperBoundaryToLowerHaloOneAxis and lowerBoundaryToUpperHaloOneAxis, to copy the particles
-        * from the boundary cells to the halo cells along each axis. This synchronization maintains the continuity
-        * of particles between the boundary and halo regions along each axis.
-        */
+
+    /**
+     * @brief Updates halo cells in the linked cell particle container.
+     *
+     * This method iterates through the boundary cells and, based on the specified boundary behaviors,
+     * copies particles to the corresponding halo cells in a periodic manner, ensuring the periodicity
+     * of the simulation for maintaining accurate boundary conditions.
+     */
     void updateHaloCells();
+
 
 
 
