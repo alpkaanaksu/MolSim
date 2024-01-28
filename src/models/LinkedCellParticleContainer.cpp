@@ -12,7 +12,8 @@
 #include "../utils/ArrayUtils.h"
 
 
-LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius, double deltaT,
+LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius,
+                                                         double deltaT,
                                                          BoundaryBehavior boundaryBehaviorTop,
                                                          BoundaryBehavior boundaryBehaviorBottom,
                                                          BoundaryBehavior boundaryBehaviorRight,
@@ -21,9 +22,9 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
                                                          BoundaryBehavior boundaryBehaviorBack)
         :
         xSize(xSize), ySize(ySize), zSize(zSize),
-        xCells(static_cast<int>(xSize >= cutoffRadius ? std::floor(xSize / cutoffRadius)  : 1)),
-        yCells(static_cast<int>(ySize >= cutoffRadius ? std::floor(ySize / cutoffRadius)  : 1)),
-        zCells(static_cast<int>(zSize >= cutoffRadius ? std::floor(zSize / cutoffRadius)  : 1)),
+        xCells(static_cast<int>(xSize >= cutoffRadius ? std::floor(xSize / cutoffRadius) : 1)),
+        yCells(static_cast<int>(ySize >= cutoffRadius ? std::floor(ySize / cutoffRadius) : 1)),
+        zCells(static_cast<int>(zSize >= cutoffRadius ? std::floor(zSize / cutoffRadius) : 1)),
         cutoffRadius(cutoffRadius),
         deltaT(deltaT), boundaryBehaviorTop(boundaryBehaviorTop),
         boundaryBehaviorBottom(boundaryBehaviorBottom), boundaryBehaviorRight(boundaryBehaviorRight),
@@ -40,7 +41,7 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
 
     int numberOfCells = xCells * yCells * zCells;
 
-    cells = std::vector<std::vector<Particle>>(numberOfCells);
+    cells = std::vector < std::vector < Particle >> (numberOfCells);
 
     isHaloCellVector = std::vector<bool>(numberOfCells, true);
 
@@ -93,17 +94,20 @@ LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double yS
     }
 
     // Iterate through haloCellIndices and set corresponding pairs to false
-    for (int haloIndex : haloCellIndices) {
+    for (int haloIndex: haloCellIndices) {
         isHaloCellVector[haloIndex] = false;
     }
 
 }
 
-LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius, double deltaT)
+LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius,
+                                                         double deltaT)
         : LinkedCellParticleContainer(xSize, ySize, zSize, cutoffRadius, deltaT, BoundaryBehavior::Reflective) {}
 
-LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius, double deltaT, BoundaryBehavior boundaryBehavior)
-        : LinkedCellParticleContainer(xSize, ySize, zSize, cutoffRadius, deltaT, boundaryBehavior, boundaryBehavior, boundaryBehavior, boundaryBehavior, boundaryBehavior, boundaryBehavior) {}
+LinkedCellParticleContainer::LinkedCellParticleContainer(double xSize, double ySize, double zSize, double cutoffRadius,
+                                                         double deltaT, BoundaryBehavior boundaryBehavior)
+        : LinkedCellParticleContainer(xSize, ySize, zSize, cutoffRadius, deltaT, boundaryBehavior, boundaryBehavior,
+                                      boundaryBehavior, boundaryBehavior, boundaryBehavior, boundaryBehavior) {}
 
 LinkedCellParticleContainer::~LinkedCellParticleContainer() = default;
 
@@ -130,11 +134,11 @@ int LinkedCellParticleContainer::cellIndexForParticle(const Particle &particle) 
         return -1;
     }
 
-    return (xIndex+1) + (yIndex+1) * xCells + (zIndex+1) * xCells * yCells;
+    return (xIndex + 1) + (yIndex + 1) * xCells + (zIndex + 1) * xCells * yCells;
 }
 
 
-void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(Particle&, Particle&)>& function) {
+void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function) {
     // Iterate through all cells in the container
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         // Skip halo cells
@@ -147,7 +151,7 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
         for (int i = 0; i < firstCell.size(); i++) {
             for (int j = i + 1; j < firstCell.size(); j++) {
                 // Check if the pair has been processed before by comparing memory addresses
-                if (&firstCell[i] < &firstCell[j]) {
+                if (&firstCell[i] < &firstCell[j] && firstCell[i].distanceTo(firstCell[j]) <= cutoffRadius) {
                     function(firstCell[i], firstCell[j]);
                 }
             }
@@ -184,19 +188,19 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     }
 }
 
-void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
+void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle &)> &function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
-        for (auto& particle : cells[cellIndex]) {
+        for (auto &particle: cells[cellIndex]) {
             function(particle);
         }
     }
 }
 
-void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Particle&)>& function) {
+void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Particle &)> &function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
-        for (auto& particle : cells[cellIndex]) {
+        for (auto &particle: cells[cellIndex]) {
             particle.setType(isHaloCellVector[cellIndex] ? 2 : 1);
 
             function(particle);
@@ -204,13 +208,13 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
     }
 }
 
-void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
+void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle &)> &function, bool updateCells) {
     deleteParticlesInHaloCells();
 
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
-        for (auto& particle : cells[cellIndex]) {
+        for (auto &particle: cells[cellIndex]) {
             function(particle);
         }
 
@@ -281,24 +285,24 @@ double LinkedCellParticleContainer::updatePositionOnLowerPeriodic(const double a
 }
 
 
-void LinkedCellParticleContainer::handlePeriodicBoundary(Particle& particle) {
+void LinkedCellParticleContainer::handlePeriodicBoundary(Particle &particle) {
     std::array<double, 3> updatedPosition = particle.getX();
 
-    if(particle.getX()[0] > xSize && boundaryBehaviorRight == BoundaryBehavior::Periodic) {
+    if (particle.getX()[0] > xSize && boundaryBehaviorRight == BoundaryBehavior::Periodic) {
         updatedPosition[0] = updatePositionOnUpperPeriodic(updatedPosition[0], 0);
-    }else if(particle.getX()[0] < 0 && boundaryBehaviorLeft == BoundaryBehavior::Periodic) {
+    } else if (particle.getX()[0] < 0 && boundaryBehaviorLeft == BoundaryBehavior::Periodic) {
         updatedPosition[0] = updatePositionOnLowerPeriodic(updatedPosition[0], 0);
     }
 
-    if(particle.getX()[1] > ySize && boundaryBehaviorTop == BoundaryBehavior::Periodic) {
+    if (particle.getX()[1] > ySize && boundaryBehaviorTop == BoundaryBehavior::Periodic) {
         updatedPosition[1] = updatePositionOnUpperPeriodic(updatedPosition[1], 1);
-    } else if(particle.getX()[1] < 0 && boundaryBehaviorBottom == BoundaryBehavior::Periodic) {
+    } else if (particle.getX()[1] < 0 && boundaryBehaviorBottom == BoundaryBehavior::Periodic) {
         updatedPosition[1] = updatePositionOnLowerPeriodic(updatedPosition[1], 1);
     }
 
-    if(particle.getX()[2] > zSize && boundaryBehaviorFront == BoundaryBehavior::Periodic) {
+    if (particle.getX()[2] > zSize && boundaryBehaviorFront == BoundaryBehavior::Periodic) {
         updatedPosition[2] = updatePositionOnUpperPeriodic(updatedPosition[2], 2);
-    } else if(particle.getX()[2] < 0 && boundaryBehaviorBack == BoundaryBehavior::Periodic) {
+    } else if (particle.getX()[2] < 0 && boundaryBehaviorBack == BoundaryBehavior::Periodic) {
         updatedPosition[2] = updatePositionOnLowerPeriodic(updatedPosition[2], 2);
     }
 
@@ -307,7 +311,7 @@ void LinkedCellParticleContainer::handlePeriodicBoundary(Particle& particle) {
 
 void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
     // Iterate through halo cells
-    for (int haloIndex : haloCellIndices) {
+    for (int haloIndex: haloCellIndices) {
         // Delete particles in the halo cell
         cells[haloIndex].clear();
     }
@@ -328,6 +332,7 @@ void LinkedCellParticleContainer::updateHaloCells() {
 
         if (leftHaloCopyNecessary) {
             handleBoundariesOneAxis(boundaryCellIndex, 0, true);
+
         }
 
         if (rightHaloCopyNecessary) {
@@ -441,7 +446,7 @@ void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex,
     halo3d[axisIndex] = haloCell;
     int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
-    for(auto &particle : cells[boundaryCellIndex]) {
+    for (auto &particle: cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
         updatedPosition[axisIndex] += isLowerHalo ? -maxSize : maxSize;
         Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
@@ -451,6 +456,7 @@ void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex,
 }
 
 void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2) {
+
     double maxSize1 = axisIndex1 == 0 ? xSize : axisIndex1 == 1 ? ySize : zSize;
     double maxSize2 = axisIndex2 == 0 ? xSize : axisIndex2 == 1 ? ySize : zSize;
 
@@ -500,7 +506,9 @@ void LinkedCellParticleContainer::handleBoundariesThreeAxes(int boundaryCellInde
     }
 }
 
-void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, double axisMin, double axisMax, int axisIndex) {
+
+void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax,
+                                                           int axisIndex) {
     std::array<double, 3> position = particle.getX();
     std::array<double, 3> velocity = particle.getV();
 
@@ -548,10 +556,10 @@ void LinkedCellParticleContainer::reflectIfNecessaryOnAxis(Particle& particle, d
 }
 
 
-void LinkedCellParticleContainer::vectorReverseReflection(Particle& particle) {
-    reflectIfNecessaryOnAxis(particle,  0, xSize, 0);
+void LinkedCellParticleContainer::vectorReverseReflection(Particle &particle) {
+    reflectIfNecessaryOnAxis(particle, 0, xSize, 0);
     reflectIfNecessaryOnAxis(particle, 0, ySize, 1);
-    reflectIfNecessaryOnAxis(particle,  0, zSize, 2);
+    reflectIfNecessaryOnAxis(particle, 0, zSize, 2);
 }
 
 nlohmann::ordered_json LinkedCellParticleContainer::json() {
@@ -560,7 +568,7 @@ nlohmann::ordered_json LinkedCellParticleContainer::json() {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
-        for (auto& particle : cells[cellIndex]) {
+        for (auto &particle: cells[cellIndex]) {
             j.push_back(particle.json());
         }
     }
@@ -636,7 +644,7 @@ double LinkedCellParticleContainer::getDeltaT() const {
     return deltaT;
 }
 
-const std::vector<std::vector<Particle>> &LinkedCellParticleContainer::getCells() const {
+const std::vector <std::vector<Particle>> &LinkedCellParticleContainer::getCells() const {
     return cells;
 }
 

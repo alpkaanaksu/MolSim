@@ -372,6 +372,14 @@ public:
     */
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
+
+
+
+    void handleBoundariesOneAxis(int boundaryCellIndex, int axisIndex, bool isLowerHalo);
+
+
+    void handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2,
+                                 bool isLowerHalo1, bool isLowerHalo2);
 };
 
 
