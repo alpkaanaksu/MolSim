@@ -270,37 +270,10 @@ public:
     void handlePeriodicBoundary(Particle &particle);
 
 
-
-    /**
-    * @brief Copies the particles from the lower boundary cells into the halo layer above upper boundary cells
-    *
-    * This method converts the parameter boundary cell index to a 3D index, then sets the position along the
-    * specified axis to the maximum cell index (respective upper halo cell), then converting the updated 3D index
-    * back to a 1D index representing the upper halo cell. Finally, it iterates through all particles in the lower
-    * boundary cell and creates new particles with the updated position and the same velocity, mass, and other
-    * properties, then adds these new particles to the upper halo cell using the `addParticleToCell` method.
-    *
-    * @param boundaryCellIndex The index of the lower boundary cell to be copied to upper halo cells.
-    * @param axisIndex The index of the axis along which the copying occurs.
-    */
-    void lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex);
+    void handleBoundariesOneAxis(int boundaryCellIndex, int axisIndex, bool isLowerHalo);
 
 
-
-    /**
-     * @brief Copies the particles from the upper boundary cells into the halo layer below lower boundary cells
-     *
-     * This method converts the parameter boundary cell index to a 3D index, then sets the position along the
-     * specified axis to the minimum cell index (respective lower halo cell), then converting the updated 3D index
-     * back to a 1D index representing the lower halo cell. Finally, it iterates through all particles in the upper
-     * boundary cell and creates new particles with the updated position and the same velocity, mass, and other
-     * properties, then adds these new particles to the lower halo cell using the `addParticleToCell` method.
-     *
-     * @param boundaryCellIndex The index of the upper boundary cell to be copied to lower halo cells.
-     * @param axisIndex The index of the axis along which the copying occurs.
-     */
-    void upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex);
-
+    void handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2);
 
 
     /**
