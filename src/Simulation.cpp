@@ -109,6 +109,7 @@ Simulation::Simulation(const std::string &filepath) {
               : 0.0;
 
     particles->add(definition["objects"]);
+    fixedParticles = particles->containsFixedObject(definition["objects"]);
 
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
@@ -147,8 +148,8 @@ Simulation::Simulation(const std::string &filepath) {
 
     }
 
-    if(definition["simulation"].contains("checkpoints")){
-        for(auto &checkpoint : definition["simulation"]["checkpoints"]){
+    if (definition["simulation"].contains("checkpoints")) {
+        for (auto &checkpoint: definition["simulation"]["checkpoints"]) {
             checkpoints.push(checkpoint);
         }
     }
@@ -166,6 +167,8 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 
 void Simulation::run() {
     outputWriter::prepareOutputFolder(out);
+    spdlog::info("Fixed particles: {}", fixedParticles);
+
 
     double current_time = 0;
 
@@ -196,7 +199,7 @@ void Simulation::run() {
 
     auto before = std::chrono::high_resolution_clock::now();
 
-    long numberOfUpdates { 0 };
+    long numberOfUpdates{0};
 
     // for this loop, we assume: current x, current f and current v are known
     while (current_time <= endTime) {
@@ -221,20 +224,23 @@ void Simulation::run() {
         particles->applyToAllPairsOnce(force);
 
         // calculate new v
-        particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
-            velocity(p);
-        });
+        particles->applyToAll(velocity);
 
         iteration++;
 
         if (thermostat.getNumDimensions() != -1 && iteration % thermostat.getThermostatInterval() == 0) {
-            thermostat.scaleVelocities(*particles);
+            if (fixedParticles) {
+                thermostat.scaleVelocitiesWithAvg(*particles);
+            } else {
+                thermostat.scaleVelocities(*particles);
+            }
+
         }
 
 
         if (nextCheckpoint != -1 && current_time >= nextCheckpoint) {
             std::ostringstream oss;
-            oss << std::setprecision(2) <<  nextCheckpoint;
+            oss << std::setprecision(2) << nextCheckpoint;
             std::string checkpointStr = oss.str();
 
             spdlog::info("Checkpoint " + checkpointStr + " reached. Saving simulation to file.");
@@ -346,7 +352,7 @@ std::string Simulation::getOutputPath() const {
     return out;
 }
 
-std::shared_ptr<ParticleContainer> Simulation::getParticles() const {
+std::shared_ptr <ParticleContainer> Simulation::getParticles() const {
     return particles;
 }
 

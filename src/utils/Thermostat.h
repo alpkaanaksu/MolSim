@@ -54,6 +54,15 @@ public:
      */
     void scaleVelocities(ParticleContainer &particleContainer);
 
+
+    /**
+     * @brief Scales the velocities of all particles in the particle container to match the target temperature including containers with fixed particles
+     *
+     * @param particleContainer The particle container to scale the velocities of
+     * */
+    void scaleVelocitiesWithAvg(ParticleContainer &particleContainer);
+
+
     /**
      * @brief Calculates the current temperature of the particle container according to the kinetic energy of the particles
      *
@@ -61,6 +70,11 @@ public:
      * @return The current temperature of the particle container
      */
     double getCurrentTemperature(ParticleContainer &particleContainer) const;
+
+
+    std::array<double, 3> getAverageVelocity(ParticleContainer &particleContainer);
+
+    double getCurrentTemperatureDynamic(ParticleContainer &particleContainer, std::array<double, 3>  averageVelocity);
 
     double getInitialTemperature() const;
 

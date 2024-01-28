@@ -139,6 +139,9 @@ public:
             auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
 
             auto distance = p2.distanceTo(p1);
+            //todo remove later
+            //distance = std::max(distance, 0.1);
+
             auto distance6 = std::pow(distance, 6);
             auto sigma6 = std::pow(sigma, 6);
 
@@ -146,8 +149,14 @@ public:
                              * ((sigma6/distance6) - 2*(std::pow(sigma6,2)/std::pow(distance6,2)))
                              * p2.diffTo(p1);
 
-            p1.setF(p1.getF() + nextForce);
-            p2.setF(p2.getF() - nextForce);
+            if(!p1.isFixed()){
+                 p1.setF(p1.getF() + nextForce);
+            }
+            if(!p2.isFixed()){
+                 p2.setF(p2.getF() - nextForce);
+            }
+
+
         };
 
         auto position = [deltaT](Particle &p) {
@@ -156,7 +165,9 @@ public:
                     deltaT * p.getV() +
                     (deltaT * deltaT / (2 * p.getM())) * p.getF();
 
-            p.setX(x);
+            if(!p.isFixed()){
+                p.setX(x);
+            }
         };
 
         auto velocity = [deltaT](Particle &p) {
@@ -164,7 +175,10 @@ public:
                     p.getV() +
                     (deltaT / (2 * p.getM())) * (p.getOldF() + p.getF());
 
-            p.setV(v);
+            if(!p.isFixed()){
+                p.setV(v);
+
+            }
         };
 
         return Model{ljForce, position, velocity};
