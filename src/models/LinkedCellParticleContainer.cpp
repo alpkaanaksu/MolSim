@@ -143,14 +143,16 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         #ifdef _OPENMP
-        std::cout << "Thread: " << omp_get_thread_num() << std::endl;
+        //spdlog::info("Thread {} processing cell {}", omp_get_thread_num(), cellIndex);
         #endif
+
         // Skip halo cells
         if (!isHaloCellVector[cellIndex]) continue;
-
+        
         auto coords = index1dTo3d(cellIndex);
         auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
 
+        
         // Iterate through all pairs of particles in the same cell
         for (int i = 0; i < firstCell.size(); i++) {
             for (int j = i + 1; j < firstCell.size(); j++) {
@@ -193,9 +195,6 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
 }
 
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function) {
-    #ifdef _OPENMP
-    #pragma omp parallel for
-    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
@@ -221,9 +220,6 @@ void LinkedCellParticleContainer::applyToAllHalo(const std::function<void(Partic
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle&)>& function, bool updateCells) {
     deleteParticlesInHaloCells();
 
-    #ifdef _OPENMP
-    #pragma omp parallel for
-    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
 
@@ -247,7 +243,6 @@ void LinkedCellParticleContainer::add(const Particle &particle) {
     } else {
         spdlog::info("Particle out of bounds: {}, {}, {}", particle.getX()[0], particle.getX()[1], particle.getX()[2]);
     }
-
 }
 
 void LinkedCellParticleContainer::addParticleToCell(int cellIndex, const Particle &particle) {
