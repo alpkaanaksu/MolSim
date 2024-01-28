@@ -294,6 +294,7 @@ public:
      */
     void handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2);
 
+
     /**
      * @brief Handles periodic boundary conditions for three axes simultaneously.
      *
@@ -375,11 +376,9 @@ public:
 
 
 
-    void handleBoundariesOneAxis(int boundaryCellIndex, int axisIndex, bool isLowerHalo);
 
 
-    void handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2,
-                                 bool isLowerHalo1, bool isLowerHalo2);
+
 };
 
 
