@@ -74,7 +74,7 @@ double Thermostat::getCurrentTemperatureDynamic(ParticleContainer &particleConta
             N++;
         }
     });
-    //todo N or particleContainer.size()?
+
     double currentTemperature = 2 * kineticEnergy / (N * numDimensions);
     return currentTemperature;
 }
