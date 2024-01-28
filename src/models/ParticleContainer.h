@@ -21,7 +21,7 @@ private:
     /**
      * The vector that contains all the particles in the container
      */
-    std::vector<Particle> particles;
+    std::vector <Particle> particles;
     std::string source;
 public:
     ParticleContainer();
@@ -31,7 +31,7 @@ public:
      *
      * @param function
      */
-    virtual void applyToAll(const std::function<void(Particle &)>& function);
+    virtual void applyToAll(const std::function<void(Particle & )> &function);
 
     /**
      * @brief Apply a function to all pairs of particles
@@ -40,7 +40,7 @@ public:
      *
      * @param function
      */
-    virtual void applyToAllPairs(const std::function<void(Particle &, Particle &)> &function);
+    virtual void applyToAllPairs(const std::function<void(Particle & , Particle & )> &function);
 
     /**
      * @brief Add a new particle to the container
@@ -70,7 +70,7 @@ public:
      *
      * @param function
      */
-    virtual void applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function);
+    virtual void applyToAllPairsOnce(const std::function<void(Particle & , Particle & )> &function);
 
     /**
      * @brief Remove a particle from the container
@@ -88,7 +88,17 @@ public:
      */
     std::vector<Particle> &getParticles();
 
-    virtual void applyToAllHalo(const std::function<void(Particle &)> &function);
+/**
+     * @brief Checks if a particle container contains any fixed particles
+     *
+     * @param objects typically a json array of objects
+     *
+     * @return True if the container contains any fixed particles
+     */
+    bool containsFixedObject(const nlohmann::json &objects);
+
+
+    virtual void applyToAllHalo(const std::function<void(Particle & )> &function);
 
     virtual nlohmann::ordered_json json();
 

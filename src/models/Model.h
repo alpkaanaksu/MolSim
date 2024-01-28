@@ -20,22 +20,24 @@ private:
     /**
      * Formula that is used to calculate the forces on particles
      */
-    std::function<void(Particle&, Particle&)> force;
+    std::function<void(Particle &, Particle &)> force;
 
     /**
      * Formula that is used to calculate the positions of particles
      */
-    std::function<void(Particle&)> position;
+    std::function<void(Particle &)> position;
 
     /**
      * Formula that is used to calculate the velocity of particles
      */
-    std::function<void(Particle&)> velocity;
+    std::function<void(Particle &)> velocity;
 
 public:
-    Model(std::function<void(Particle&, Particle&)> force, std::function<void(Particle&)> position, std::function<void(Particle&)> velocity) : force(std::move(force)), position(std::move(position)), velocity(std::move(velocity)) {};
+    Model(std::function<void(Particle &, Particle &)> force, std::function<void(Particle &)> position,
+          std::function<void(Particle &)> velocity) : force(std::move(force)), position(std::move(position)),
+                                                      velocity(std::move(velocity)) {};
 
-    Model() : force([](Particle &p1, Particle &p2){}), position([](Particle &p){}),  velocity([](Particle &p){}) {};
+    Model() : force([](Particle &p1, Particle &p2) {}), position([](Particle &p) {}), velocity([](Particle &p) {}) {};
 
 
     /**
@@ -44,9 +46,9 @@ public:
      * @return The lambda function for resetting the force
      */
 
-    static std::function<void(Particle&)> resetForceFunction() {
+    static std::function<void(Particle &)> resetForceFunction() {
         return [](Particle &p) {
-            p.updateF(std::array<double, 3> {0., 0., 0.});
+            p.updateF(std::array < double, 3 > {0., 0., 0.});
         };
     };
 
@@ -68,7 +70,7 @@ public:
      *
      * @return The function for force
      */
-    std::function<void(Particle&, Particle&)> forceFunction() {
+    std::function<void(Particle &, Particle &)> forceFunction() {
         return force;
     }
 
@@ -77,7 +79,7 @@ public:
      *
      * @return The lambda function for position
      */
-    std::function<void(Particle&)> positionFunction() {
+    std::function<void(Particle &)> positionFunction() {
         return position;
     }
 
@@ -86,7 +88,7 @@ public:
      *
      * @return The lambda function for velocity
      */
-    std::function<void(Particle&)> velocityFunction() {
+    std::function<void(Particle &)> velocityFunction() {
         return velocity;
     }
 
@@ -139,15 +141,81 @@ public:
             auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
 
             auto distance = p2.distanceTo(p1);
+            //todo remove later
+            //distance = std::max(distance, 0.1);
+
             auto distance6 = std::pow(distance, 6);
             auto sigma6 = std::pow(sigma, 6);
 
-            auto nextForce = (-24 * epsilon / std::pow(distance,2))
-                             * ((sigma6/distance6) - 2*(std::pow(sigma6,2)/std::pow(distance6,2)))
+            auto nextForce = (-24 * epsilon / std::pow(distance, 2))
+                             * ((sigma6 / distance6) - 2 * (std::pow(sigma6, 2) / std::pow(distance6, 2)))
                              * p2.diffTo(p1);
 
-            p1.setF(p1.getF() + nextForce);
-            p2.setF(p2.getF() - nextForce);
+            if(!p1.isFixed()){
+                 p1.setF(p1.getF() + nextForce);
+            }
+            if(!p2.isFixed()){
+                 p2.setF(p2.getF() - nextForce);
+            }
+
+
+        };
+
+        auto position = [deltaT](Particle &p) {
+            auto x =
+                    p.getX() +
+                    deltaT * p.getV() +
+                    (deltaT * deltaT / (2 * p.getM())) * p.getF();
+
+            if(!p.isFixed()){
+                p.setX(x);
+            }
+        };
+
+        auto velocity = [deltaT](Particle &p) {
+            auto v =
+                    p.getV() +
+                    (deltaT / (2 * p.getM())) * (p.getOldF() + p.getF());
+
+            if(!p.isFixed()){
+                p.setV(v);
+
+            }
+        };
+
+        return Model{ljForce, position, velocity};
+    }
+
+
+    static Model smoothedLennardJonesModel(double deltaT, double cutoffRadius, double smoothedRadius) {
+        auto ljForce = [smoothedRadius, cutoffRadius](Particle &p1, Particle &p2) {
+            auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
+            auto sigma = (p1.getSigma() + p2.getSigma()) / 2;
+
+            auto distance = p2.distanceTo(p1);
+            auto distance6 = std::pow(distance, 6);
+            auto distance14 = std::pow(distance, 14);
+            auto sigma6 = std::pow(sigma, 6);
+
+            if (distance <= smoothedRadius) {
+                // force from non-smoothed lennard jones
+                auto nextForce = (-24 * epsilon / std::pow(distance, 2))
+                                 * ((sigma6 / distance6) - 2 * (std::pow(sigma6, 2) / std::pow(distance6, 2)))
+                                 * p2.diffTo(p1);
+                p1.setF(p1.getF() + nextForce);
+                p2.setF(p2.getF() - nextForce);
+            } else if (distance < cutoffRadius) {
+                auto term1 = ((-24 * sigma6 * epsilon) / (distance14 * std::pow((cutoffRadius - smoothedRadius), 3)))
+                             *(cutoffRadius - distance) * (p2.getX() - p1.getX()) ;
+                auto term2 = (std::pow(cutoffRadius, 2) * (2 * sigma6 - distance6)) +
+                             (cutoffRadius * (3 * smoothedRadius - distance) * (distance6 - 2 * sigma6)) +
+                              (distance * ((5 * smoothedRadius * sigma6) - (2 * smoothedRadius * distance6) -
+                                           (3 * sigma6 * distance) + std::pow(distance, 7)));
+                auto nextForce = term2 * term1;
+                p1.setF(p1.getF() + nextForce);
+                p2.setF(p2.getF() - nextForce);
+            }
+
         };
 
         auto position = [deltaT](Particle &p) {
@@ -166,7 +234,6 @@ public:
 
             p.setV(v);
         };
-
         return Model{ljForce, position, velocity};
     }
 

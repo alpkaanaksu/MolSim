@@ -11,6 +11,7 @@
 #include <spdlog/spdlog.h>
 
 #include <boost/filesystem.hpp>
+
 namespace fs = boost::filesystem;
 
 ParticleContainer::ParticleContainer() {
@@ -18,13 +19,13 @@ ParticleContainer::ParticleContainer() {
 
 }
 
-void ParticleContainer::applyToAll(const std::function<void(Particle &)> &function) {
+void ParticleContainer::applyToAll(const std::function<void(Particle & )> &function) {
     for (auto &p: particles) {
         function(p);
     }
 }
 
-void ParticleContainer::applyToAllPairs(const std::function<void(Particle &, Particle &)> &function) {
+void ParticleContainer::applyToAllPairs(const std::function<void(Particle & , Particle & )> &function) {
     for (auto &p1: particles) {
         for (auto &p2: particles) {
             if (p1 == p2) {
@@ -37,7 +38,7 @@ void ParticleContainer::applyToAllPairs(const std::function<void(Particle &, Par
     }
 }
 
-void ParticleContainer::applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function) {
+void ParticleContainer::applyToAllPairsOnce(const std::function<void(Particle & , Particle & )> &function) {
     for (int i = 0; i < particles.size(); i++) {
         for (int j = i + 1; j < particles.size(); j++) {
             function(particles[i], particles[j]);
@@ -48,6 +49,15 @@ void ParticleContainer::applyToAllPairsOnce(const std::function<void(Particle &,
 
 void ParticleContainer::add(const Particle &particle) {
     particles.push_back(particle);
+}
+
+bool ParticleContainer::containsFixedObject(const nlohmann::json &objects) {
+    for (auto &object: objects) {
+        if (object.contains("fixed") && object["fixed"] == true) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ParticleContainer::add(const nlohmann::json &objects) {
@@ -65,15 +75,20 @@ void ParticleContainer::add(const nlohmann::json &objects) {
             }
 
             add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"], 0.0, 0});
+            //add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"],
+            //             object["sigma"], object["type_id"], object["fixed"]});
+          
+          
+          
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "sphere") {
             Generator::sphere(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "disk") {
             Generator::disk(*this, object["center"], object["radius"], object["mesh_width"], object["velocity"],
-                              object["mass"], object["type_id"], object["epsilon"], object["sigma"]);
+                            object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "checkpoint") {
             resolveCheckpoint(object["path"]);
         } else if (object["type"] == "membrane") {
@@ -118,6 +133,7 @@ void ParticleContainer::remove(Particle &particle) {
     }
 }
 
+
 std::vector<Particle> &ParticleContainer::getParticles() {
     return particles;
 }
@@ -134,11 +150,11 @@ std::string ParticleContainer::toString() {
 
 nlohmann::ordered_json ParticleContainer::json() {
     nlohmann::ordered_json j;
-   for (auto &p : particles) {
-         j.push_back(p.json());
+    for (auto &p: particles) {
+        j.push_back(p.json());
     }
 
-   return j;
+    return j;
 }
 
 void ParticleContainer::setSource(const std::string src) {
@@ -154,6 +170,6 @@ std::ostream &operator<<(std::ostream &stream, ParticleContainer &simulation) {
     return stream;
 }
 
-void ParticleContainer::applyToAllHalo(const std::function<void(Particle &)> &function) {
+void ParticleContainer::applyToAllHalo(const std::function<void(Particle & )> &function) {
     applyToAll(function);
 }

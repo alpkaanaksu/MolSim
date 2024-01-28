@@ -33,6 +33,7 @@ private:
     double gravity;
     Thermostat thermostat;
     bool membrane = false;
+    bool fixedParticles;
 
 public:
     /**

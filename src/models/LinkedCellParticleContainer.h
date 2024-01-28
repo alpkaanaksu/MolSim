@@ -238,9 +238,6 @@ public:
     */
     double updatePositionOnUpperPeriodic(const double axisPosition, int axisIndex);
 
-
-
-
     /**
      * @brief Makes the particle that crosses lower boundary to reappear on the upper boundary
      *
@@ -306,6 +303,7 @@ public:
      * @param isLowerHalo2 Indicates whether it is the lower halo cell for the second axis (true) or upper halo cell (false).
      * @param isLowerHalo3 Indicates whether it is the lower halo cell for the third axis (true) or upper halo cell (false).
      */
+
     void handleBoundariesThreeAxes(int boundaryCellIndex, bool isLowerHalo1, bool isLowerHalo2, bool isLowerHalo3);
 
 
@@ -374,6 +372,7 @@ public:
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
     void applyToAllPairsOnceMembrane(const std::function<void(Particle &, Particle &)> &function);
+
 };
 
 
