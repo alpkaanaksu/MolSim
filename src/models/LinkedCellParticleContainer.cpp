@@ -314,59 +314,186 @@ void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
 }
 
 void LinkedCellParticleContainer::updateHaloCells() {
-    for (int boundaryCellIndex : boundaryCellIndices) {
+    for (int boundaryCellIndex: boundaryCellIndices) {
         std::array<int, 3> boundary3d = index1dTo3d(boundaryCellIndex);
 
-        if (boundaryBehaviorLeft == BoundaryBehavior::Periodic && boundary3d[0] == xCells - 2) {
-            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 0);
-        } else if (boundaryBehaviorRight == BoundaryBehavior::Periodic && boundary3d[0] == 1) {
-            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 0);
+        bool leftHaloCopyNecessary = boundaryBehaviorLeft == BoundaryBehavior::Periodic && boundary3d[0] == xCells - 2;
+        bool rightHaloCopyNecessary = boundaryBehaviorRight == BoundaryBehavior::Periodic && boundary3d[0] == 1;
+        bool bottomHaloCopyNecessary =
+                boundaryBehaviorBottom == BoundaryBehavior::Periodic && boundary3d[1] == yCells - 2;
+        bool topHaloCopyNecessary = boundaryBehaviorTop == BoundaryBehavior::Periodic && boundary3d[1] == 1;
+        bool backHaloCopyNecessary = boundaryBehaviorBack == BoundaryBehavior::Periodic && boundary3d[2] == zCells - 2;
+        bool frontHaloCopyNecessary = boundaryBehaviorFront == BoundaryBehavior::Periodic && boundary3d[2] == 1;
+
+
+        if (leftHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 0, true);
         }
 
-        if (boundaryBehaviorBottom == BoundaryBehavior::Periodic && boundary3d[1] == yCells - 2) {
-            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 1);
-        } else if (boundaryBehaviorTop == BoundaryBehavior::Periodic && boundary3d[1] == 1) {
-            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 1);
+        if (rightHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 0, false);
         }
 
-        if (boundaryBehaviorBack == BoundaryBehavior::Periodic && boundary3d[2] == zCells - 2) {
-            upperBoundaryToLowerHaloOneAxis(boundaryCellIndex, 2);
-        } else if (boundaryBehaviorFront == BoundaryBehavior::Periodic && boundary3d[2] == 1) {
-            lowerBoundaryToUpperHaloOneAxis(boundaryCellIndex, 2);
+        if (bottomHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 1, true);
         }
+
+        if (topHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 1, false);
+        }
+
+        if (backHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 2, true);
+        }
+
+        if (frontHaloCopyNecessary) {
+            handleBoundariesOneAxis(boundaryCellIndex, 2, false);
+        }
+
+        if (leftHaloCopyNecessary && bottomHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 1, true, true);
+        }
+
+        if (leftHaloCopyNecessary && topHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 1, true, false);
+        }
+
+        if (leftHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 2, true, true);
+        }
+
+        if (leftHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 2, true, false);
+        }
+
+        if (rightHaloCopyNecessary && bottomHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 1, false, true);
+        }
+
+        if (rightHaloCopyNecessary && topHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 1, false, false);
+        }
+
+        if (rightHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 2, false, true);
+        }
+
+        if (rightHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 0, 2, false, false);
+        }
+
+        if (bottomHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 1, 2, true, true);
+        }
+
+        if (bottomHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 1, 2, true, false);
+        }
+
+        if (topHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 1, 2, false, true);
+        }
+
+        if (topHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesTwoAxes(boundaryCellIndex, 1, 2, false, false);
+        }
+
+        if (leftHaloCopyNecessary && bottomHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, true, true);
+        }
+
+        if (leftHaloCopyNecessary && bottomHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, true, false);
+        }
+
+        if (leftHaloCopyNecessary && topHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, false, true);
+        }
+
+        if (leftHaloCopyNecessary && topHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, false, false);
+        }
+
+        if (rightHaloCopyNecessary && bottomHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, true, true);
+        }
+
+        if (rightHaloCopyNecessary && bottomHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, true, false);
+        }
+
+        if (rightHaloCopyNecessary && topHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, false, true);
+        }
+
+        if (rightHaloCopyNecessary && topHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, false, false);
+        }
+
     }
 }
 
-void LinkedCellParticleContainer::upperBoundaryToLowerHaloOneAxis(int boundaryCellIndex, int axisIndex) {
+void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex, int axisIndex, bool isLowerHalo) {
     double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
-    int minCells = 0;
+    int haloCell = isLowerHalo ? 0 : (axisIndex == 0 ? xCells : axisIndex == 1 ? yCells : zCells) - 1;
 
     std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
-    halo3d[axisIndex] = minCells;
+    halo3d[axisIndex] = haloCell;
     int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
     for(auto &particle : cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
-        updatedPosition[axisIndex] = updatedPosition[axisIndex] - maxSize;
+        updatedPosition[axisIndex] += isLowerHalo ? -maxSize : maxSize;
         Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
 
-        //spdlog::info("Adding particle to halo cell: {}, {}, {}", newParticle.getX()[0], newParticle.getX()[1], newParticle.getX()[2]);
         addParticleToCell(haloCellIndex, newParticle);
     }
 }
 
+void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2) {
+    double maxSize1 = axisIndex1 == 0 ? xSize : axisIndex1 == 1 ? ySize : zSize;
+    double maxSize2 = axisIndex2 == 0 ? xSize : axisIndex2 == 1 ? ySize : zSize;
 
-void LinkedCellParticleContainer::lowerBoundaryToUpperHaloOneAxis(int boundaryCellIndex, int axisIndex) {
-    double maxSize = axisIndex == 0 ? xSize : axisIndex == 1 ? ySize : zSize;
-    int maxCells = axisIndex == 0 ? xCells : axisIndex == 1 ? yCells : zCells;
+    int haloCells1 = isLowerHalo1 ? 0 : (axisIndex1 == 0 ? xCells : axisIndex1 == 1 ? yCells : zCells) - 1;
+    int haloCells2 = isLowerHalo2 ? 0 : (axisIndex2 == 0 ? xCells : axisIndex2 == 1 ? yCells : zCells) - 1;
 
     std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
-    halo3d[axisIndex] = maxCells - 1;
+    halo3d[axisIndex1] = haloCells1;
+    halo3d[axisIndex2] = haloCells2;
     int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
-    for(auto &particle : cells[boundaryCellIndex]) {
+    for (auto &particle : cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
-        updatedPosition[axisIndex] = updatedPosition[axisIndex] + maxSize;
+        updatedPosition[axisIndex1] += isLowerHalo1 ? -maxSize1 : maxSize1;
+        updatedPosition[axisIndex2] += isLowerHalo2 ? -maxSize2 : maxSize2;
+
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+
+        addParticleToCell(haloCellIndex, newParticle);
+    }
+}
+
+void LinkedCellParticleContainer::handleBoundariesThreeAxes(int boundaryCellIndex, bool isLowerHalo1, bool isLowerHalo2, bool isLowerHalo3) {
+    double maxSize1 = xSize;
+    double maxSize2 = ySize;
+    double maxSize3 = zSize;
+
+    int haloCells1 = isLowerHalo1 ? 0 : xCells - 1;
+    int haloCells2 = isLowerHalo2 ? 0 : yCells - 1;
+    int haloCells3 = isLowerHalo3 ? 0 : zCells - 1;
+
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[0] = haloCells1;
+    halo3d[1] = haloCells2;
+    halo3d[2] = haloCells3;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
+
+    for (auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[0] += isLowerHalo1 ? -maxSize1 : maxSize1;
+        updatedPosition[1] += isLowerHalo2 ? -maxSize2 : maxSize2;
+        updatedPosition[2] += isLowerHalo3 ? -maxSize3 : maxSize3;
+
         Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
 
         addParticleToCell(haloCellIndex, newParticle);
