@@ -59,36 +59,36 @@ private:
 
     double sigma;
 
-  std::vector<int> directNeighbors;
+    std::vector<int> directNeighbors;
 
-  std::vector<int> diagonalNeighbors;
+    std::vector<int> diagonalNeighbors;
 
-  double avgBondLength;
+    double avgBondLength;
 
-  int stiffnessFactor;
+    int stiffnessFactor;
 
-  bool pulled;
+    bool pulled;
 
-  int id;
+    int id;
 
 public:
     explicit Particle(int type = 0);
 
     Particle(const Particle &other);
 
-  Particle(
-      // for visualization, we need always 3 coordinates
-      // -> in case of 2d, we use only the first and the second
-      std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
-      int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
-    
-  Particle(
+    Particle(
             // for visualization, we need always 3 coordinates
             // -> in case of 2d, we use only the first and the second
             std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
-            int type = 0, bool fix = false);
+            int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
 
-  Particle(
+    Particle(
+            // for visualization, we need always 3 coordinates
+            // -> in case of 2d, we use only the first and the second
+            std::array<double, 3> x_arg, std::array<double, 3> v_arg, double m_arg, double eps, double sig,
+            int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false, bool fix = false);
+
+    Particle(
             // for visualization, we need always 3 coordinates
             // -> in case of 2d, we use only the first and the second
             std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg,
@@ -99,10 +99,10 @@ public:
 
     const std::array<double, 3> &getX() const;
 
-  Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg, std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0, double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
+    Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg, std::array<double, 3> f_arg,
+             std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0,
+             double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
 
-  virtual ~Particle();
-  
     const std::array<double, 3> &getV() const;
 
     const std::array<double, 3> &getF() const;
@@ -125,7 +125,7 @@ public:
 
     void setSigma(double sig);
 
-    void setFixed(bool fixed) ;
+    void setFixed(bool fixed);
 
     std::string toString() const;
 
@@ -167,29 +167,29 @@ public:
  *
  * @return nlohmann::json object representing a particle
  */
-nlohmann::ordered_json json();
+    nlohmann::ordered_json json();
 
-void addDirectNeighbor(int id);
+    void addDirectNeighbor(int id);
 
-void addDiagonalNeighbor(int id);
+    void addDiagonalNeighbor(int id);
 
-std::vector<int> getDirectNeighbors();
+    std::vector<int> getDirectNeighbors();
 
-std::vector<int> getDiagonalNeighbors();
+    std::vector<int> getDiagonalNeighbors();
 
-double getAvgBondLength();
+    double getAvgBondLength();
 
-int getStiffnessFactor();
+    int getStiffnessFactor();
 
-bool isPulled();
+    bool isPulled();
 
-int getId();
+    int getId();
 
-void setId(int id_arg);
+    void setId(int id_arg);
 
-bool isDirectNeighbor(int id);
+    bool isDirectNeighbor(int id);
 
-bool isDiagonalNeighbor(int id);
+    bool isDiagonalNeighbor(int id);
 };
 
 std::ostream &operator<<(std::ostream &stream, Particle &p);

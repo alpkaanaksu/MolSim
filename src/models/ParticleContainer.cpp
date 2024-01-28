@@ -74,11 +74,7 @@ void ParticleContainer::add(const nlohmann::json &objects) {
                 old_f = object["old_force"];
             }
 
-            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"], 0.0, 0});
-            //add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"],
-            //             object["sigma"], object["type_id"], object["fixed"]});
-          
-          
+            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"], 0.0, 0, object["fixed"]});
           
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
