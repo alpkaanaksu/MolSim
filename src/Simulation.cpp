@@ -115,6 +115,8 @@ Simulation::Simulation(const std::string &filepath) {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
         model = Model::lennardJonesModel(deltaT);
+    } else if(definition["simulation"]["model"] == "smoothed_lennard_jones"){
+        model = Model::smoothedLennardJonesModel(deltaT, definition["simulation"]["particle_container"]["cutoff_radius"], definition["simulation"]["particle_container"]["smooth_cutoff_radius"]);
     }
 
     if (definition["simulation"].contains("thermostat")) {

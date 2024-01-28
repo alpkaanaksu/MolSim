@@ -1,0 +1,43 @@
+{
+  "simulation": {
+    "model": "smoothed_lennard_jones",
+    "thermostat": {
+      "initial_temperature": 3.0,
+      "target_temperature": 0.02,
+      "interval": 25,
+      "dimension": 3,
+      "delta_temperature:": 0.0025,
+      "brownian": true
+    },
+    "particle_container": {
+      "type": "linked_cell",
+      "dimensions": [9.2, 9.2, 9.2],
+      "cutoff_radius": 2.3,
+      "smooth_cutoff_radius": 1.9,
+      "boundary": {
+        "all": "periodic"
+      }
+    },
+    "end_time": 100,
+    "time_delta": 0.001,
+    "video_duration": 60,
+    "frame_rate": 24,
+    "output_type": "vtk",
+    "output_path": "output",
+    "gravity": 0
+  },
+  "objects": [
+    {
+      "type": "cuboid",
+      "type_id": 1,
+      "position": [0.575, 0.575, 0.575],
+      "velocity": [0, 0, 0],
+      "size": [8, 8, 8],
+      "mesh_width": 1.15,
+      "mass": 1.0,
+      "sigma": 1.0,
+      "epsilon": 1.0
+    }
+  ],
+
+}

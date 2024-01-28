@@ -321,7 +321,6 @@ void LinkedCellParticleContainer::updateHaloCells() {
     for (int boundaryCellIndex: boundaryCellIndices) {
         std::array<int, 3> boundary3d = index1dTo3d(boundaryCellIndex);
 
-
         bool leftHaloCopyNecessary = boundaryBehaviorLeft == BoundaryBehavior::Periodic && boundary3d[0] == xCells - 2;
         bool rightHaloCopyNecessary = boundaryBehaviorRight == BoundaryBehavior::Periodic && boundary3d[0] == 1;
         bool bottomHaloCopyNecessary =
@@ -333,6 +332,7 @@ void LinkedCellParticleContainer::updateHaloCells() {
 
         if (leftHaloCopyNecessary) {
             handleBoundariesOneAxis(boundaryCellIndex, 0, true);
+
         }
 
         if (rightHaloCopyNecessary) {
@@ -402,6 +402,39 @@ void LinkedCellParticleContainer::updateHaloCells() {
         if (topHaloCopyNecessary && frontHaloCopyNecessary) {
             handleBoundariesTwoAxes(boundaryCellIndex, 1, 2, false, false);
         }
+
+        if (leftHaloCopyNecessary && bottomHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, true, true);
+        }
+
+        if (leftHaloCopyNecessary && bottomHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, true, false);
+        }
+
+        if (leftHaloCopyNecessary && topHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, false, true);
+        }
+
+        if (leftHaloCopyNecessary && topHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, true, false, false);
+        }
+
+        if (rightHaloCopyNecessary && bottomHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, true, true);
+        }
+
+        if (rightHaloCopyNecessary && bottomHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, true, false);
+        }
+
+        if (rightHaloCopyNecessary && topHaloCopyNecessary && backHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, false, true);
+        }
+
+        if (rightHaloCopyNecessary && topHaloCopyNecessary && frontHaloCopyNecessary) {
+            handleBoundariesThreeAxes(boundaryCellIndex, false, false, false);
+        }
+
     }
 }
 
@@ -416,15 +449,14 @@ void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex,
     for (auto &particle: cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
         updatedPosition[axisIndex] += isLowerHalo ? -maxSize : maxSize;
-        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(),
-                                        particle.getSigma(), particle.getType());
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
 
         addParticleToCell(haloCellIndex, newParticle);
     }
 }
 
-void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2,
-                                                          bool isLowerHalo1, bool isLowerHalo2) {
+void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2) {
+
     double maxSize1 = axisIndex1 == 0 ? xSize : axisIndex1 == 1 ? ySize : zSize;
     double maxSize2 = axisIndex2 == 0 ? xSize : axisIndex2 == 1 ? ySize : zSize;
 
@@ -436,13 +468,39 @@ void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex,
     halo3d[axisIndex2] = haloCells2;
     int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
-    for (auto &particle: cells[boundaryCellIndex]) {
+    for (auto &particle : cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
         updatedPosition[axisIndex1] += isLowerHalo1 ? -maxSize1 : maxSize1;
         updatedPosition[axisIndex2] += isLowerHalo2 ? -maxSize2 : maxSize2;
 
-        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(),
-                                        particle.getSigma(), particle.getType());
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+
+        addParticleToCell(haloCellIndex, newParticle);
+    }
+}
+
+void LinkedCellParticleContainer::handleBoundariesThreeAxes(int boundaryCellIndex, bool isLowerHalo1, bool isLowerHalo2, bool isLowerHalo3) {
+    double maxSize1 = xSize;
+    double maxSize2 = ySize;
+    double maxSize3 = zSize;
+
+    int haloCells1 = isLowerHalo1 ? 0 : xCells - 1;
+    int haloCells2 = isLowerHalo2 ? 0 : yCells - 1;
+    int haloCells3 = isLowerHalo3 ? 0 : zCells - 1;
+
+    std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
+    halo3d[0] = haloCells1;
+    halo3d[1] = haloCells2;
+    halo3d[2] = haloCells3;
+    int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
+
+    for (auto &particle : cells[boundaryCellIndex]) {
+        std::array<double, 3> updatedPosition = particle.getX();
+        updatedPosition[0] += isLowerHalo1 ? -maxSize1 : maxSize1;
+        updatedPosition[1] += isLowerHalo2 ? -maxSize2 : maxSize2;
+        updatedPosition[2] += isLowerHalo3 ? -maxSize3 : maxSize3;
+
+        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
 
         addParticleToCell(haloCellIndex, newParticle);
     }
