@@ -188,6 +188,99 @@ void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(P
     }
 }
 
+void LinkedCellParticleContainer::applyToAllPairsOnceMembrane(const std::function<void(Particle&, Particle&)>& function) {
+    // Iterate through all cells in the container
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        // Skip halo cells
+        if (!isHaloCellVector[cellIndex]) continue;
+
+        auto coords = index1dTo3d(cellIndex);
+        auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
+
+        // Iterate through all pairs of particles in the same cell
+        for (int i = 0; i < firstCell.size(); i++) {
+            Particle& currentParticle = firstCell[i];
+
+            for (int j = i + 1; j < firstCell.size(); j++) {
+                Particle& neighborParticle = firstCell[j];
+
+                // Check if the pair has been processed before by comparing ids
+                if (&currentParticle < &neighborParticle &&
+                        !currentParticle.isDirectNeighbor(neighborParticle.getId()) && !currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
+                    function(currentParticle, neighborParticle);
+                    //spdlog::info("Lennard Jones1: Current particle force ({} {}): {}, {}, {}", currentParticle.getId(), neighborParticle.getId(), currentParticle.getF()[0], currentParticle.getF()[1], currentParticle.getF()[2]);
+                } else if (&currentParticle < &neighborParticle &&
+                    currentParticle.isDirectNeighbor(neighborParticle.getId())) {
+                        std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
+                                                              (neighborParticle.distanceTo(currentParticle) -
+                                                               currentParticle.getAvgBondLength()) *
+                                                              ((1 / neighborParticle.distanceTo(currentParticle)) *
+                                                               currentParticle.diffTo(neighborParticle));
+
+                        currentParticle.setF(currentParticle.getF() + membraneForce);
+                        neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    //spdlog::info("Neighbor1: Current particle force: {}, {}, {}", currentParticle.getF()[0], currentParticle.getF()[1], currentParticle.getF()[2]);
+                } else if (&currentParticle < &neighborParticle &&
+                        currentParticle.isDiagonalNeighbor(neighborParticle.getId())) {
+                        std::array<double, 3> membraneForce = currentParticle.getStiffnessFactor() *
+                                                              (neighborParticle.distanceTo(currentParticle) -
+                                                               currentParticle.getAvgBondLength() * std::sqrt(2)) *
+                                                              ((1 / neighborParticle.distanceTo(currentParticle)) *
+                                                               currentParticle.diffTo(neighborParticle));
+
+                        currentParticle.setF(currentParticle.getF() + membraneForce);
+                        neighborParticle.setF(neighborParticle.getF() - membraneForce);
+                    // spdlog::info("Neighbor1: Current particle force: {}, {}, {}", currentParticle.getF()[0], currentParticle.getF()[1], currentParticle.getF()[2]);
+                }
+            }
+        }
+
+
+        // Iterate through neighboring cells
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    int neighborX = coords[0] + x;
+                    int neighborY = coords[1] + y;
+                    int neighborZ = coords[2] + z;
+
+                    if (x == 0 && y == 0 && z == 0) continue;
+
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
+
+                    for (auto &p1: firstCell) {
+                        for (auto &p2: currentCell) {
+                            // Check if the pair has been processed before by comparing ids
+                            if (&p1 < &p2 && p1.distanceTo(p2) <= cutoffRadius &&
+                                    !p1.isDirectNeighbor(p2.getId()) && !p1.isDiagonalNeighbor(p2.getId())) {
+                                function(p1, p2);
+                                //spdlog::info("Lennard Jones2 ({} {}): Current particle force: {}, {}, {}",p1.getId(), p2.getId(), p1.getF()[0], p1.getF()[1], p1.getF()[2]);
+                            } else if (&p1 < &p2 && p1.isDirectNeighbor(p2.getId())) {
+                                std::array<double, 3> membraneForce = p1.getStiffnessFactor() *
+                                                                      (p2.distanceTo(p1) - p1.getAvgBondLength()) *
+                                                                      ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
+
+                                p1.setF(p1.getF() + membraneForce);
+                                p2.setF(p2.getF() - membraneForce);
+                                //spdlog::info("Neighbor2: Current particle force: {}, {}, {}", p1.getF()[0], p1.getF()[1], p1.getF()[2]);
+                            } else if (&p1 < &p2 && p1.isDiagonalNeighbor(p2.getId())) {
+                                std::array<double,3> membraneForce = p1.getStiffnessFactor() *
+                                                (p2.distanceTo(p1) - p1.getAvgBondLength() * std::sqrt(2)) *
+                                                ((1 / p2.distanceTo(p1)) * p1.diffTo(p2));
+
+                                p1.setF(p1.getF() + membraneForce);
+                                p2.setF(p2.getF() - membraneForce);
+                                //spdlog::info("Neighbor2: Current particle force: {}, {}, {}", p1.getF()[0], p1.getF()[1], p1.getF()[2]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void LinkedCellParticleContainer::applyToAll(const std::function<void(Particle &)> &function) {
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         if (!isHaloCellVector[cellIndex]) continue;  // Skip processing for halo cells
@@ -317,6 +410,7 @@ void LinkedCellParticleContainer::deleteParticlesInHaloCells() {
     }
 }
 
+
 void LinkedCellParticleContainer::updateHaloCells() {
     for (int boundaryCellIndex: boundaryCellIndices) {
         std::array<int, 3> boundary3d = index1dTo3d(boundaryCellIndex);
@@ -332,7 +426,6 @@ void LinkedCellParticleContainer::updateHaloCells() {
 
         if (leftHaloCopyNecessary) {
             handleBoundariesOneAxis(boundaryCellIndex, 0, true);
-
         }
 
         if (rightHaloCopyNecessary) {
@@ -456,7 +549,6 @@ void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex,
 }
 
 void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex, int axisIndex1, int axisIndex2, bool isLowerHalo1, bool isLowerHalo2) {
-
     double maxSize1 = axisIndex1 == 0 ? xSize : axisIndex1 == 1 ? ySize : zSize;
     double maxSize2 = axisIndex2 == 0 ? xSize : axisIndex2 == 1 ? ySize : zSize;
 
@@ -466,6 +558,7 @@ void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex,
     std::array<int, 3> halo3d = index1dTo3d(boundaryCellIndex);
     halo3d[axisIndex1] = haloCells1;
     halo3d[axisIndex2] = haloCells2;
+
     int haloCellIndex = index3dTo1d(halo3d[0], halo3d[1], halo3d[2]);
 
     for (auto &particle : cells[boundaryCellIndex]) {
@@ -496,6 +589,7 @@ void LinkedCellParticleContainer::handleBoundariesThreeAxes(int boundaryCellInde
 
     for (auto &particle : cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
+
         updatedPosition[0] += isLowerHalo1 ? -maxSize1 : maxSize1;
         updatedPosition[1] += isLowerHalo2 ? -maxSize2 : maxSize2;
         updatedPosition[2] += isLowerHalo3 ? -maxSize3 : maxSize3;

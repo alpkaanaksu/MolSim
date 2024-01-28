@@ -86,7 +86,7 @@ public:
      *
      * @return Internal particle vector
      */
-    const std::vector <Particle> &getParticles() const;
+    std::vector<Particle> &getParticles();
 
 /**
      * @brief Checks if a particle container contains any fixed particles

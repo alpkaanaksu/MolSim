@@ -6,6 +6,7 @@
 #include "ArrayUtils.h"
 #include <array>
 #include <iostream>
+#include <spdlog/spdlog.h>
 
 void Generator::cuboid(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
                        double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, bool fixed) {
@@ -28,6 +29,89 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
         }
     }
 }
+
+void Generator::membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
+                         double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor) {
+
+    std::vector<Particle*> particleIndexVector;
+
+    int nextId = 0;
+
+    for (int x = 0; x < size[0]; x++) {
+        for (int z = 0; z < size[2]; z++) {
+            for (int y = 0; y < size[1]; y++) {
+                Particle* newParticle = new Particle {
+                        {
+                                position[0] + x * meshWidth,
+                                position[1] + y * meshWidth,
+                                position[2] + z * meshWidth
+                        },
+                        velocity,
+                        mass,
+                        epsilon,
+                        sigma,
+                        typeId,
+                        avgBondLength,
+                        stiffnessFactor,
+                        //(x == 2 && y == 2) || (x == 2 && y == 3)
+                        (x == 17 && z == 24) || (x == 17 && z == 25) || (x == 18 && z == 24) || (x == 18 && z == 25)
+                };
+
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        // Skip the current particle
+                        if (dx == 0 && dz == 0) {
+                            continue;
+                        }
+
+                        int nx = nextId % size[0] + dx;
+                        int nz = nextId / size[0] + dz;
+
+                        // Check if the neighbor is within the valid range
+                        if (nx >= 0 && nx < size[0] && nz >= 0 && nz < size[2]) {
+                            int neighborParticleIndex = nz * size[0] + nx;
+
+                            if (neighborParticleIndex >= 0 && neighborParticleIndex < (size[0] * size[2])) {
+                                if (dx == 0 || dz == 0) {
+                                    newParticle->addDirectNeighbor(neighborParticleIndex);
+                                } else {
+                                    newParticle->addDiagonalNeighbor(neighborParticleIndex);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                newParticle->setId(nextId++);
+                particleIndexVector.push_back(newParticle);
+                container.add(*newParticle);
+            }
+        }
+    }
+
+    // Print out all particles' positions and their neighbors' positions (not ids)
+    for (int i = 0; i < particleIndexVector.size(); i++) {
+        std::cout << std::endl;
+        std::cout << "Particle " << i << " position: " << particleIndexVector[i]->getX()[0] << " " << particleIndexVector[i]->getX()[1] << " " << particleIndexVector[i]->getX()[2] << std::endl;
+        std::cout << "Particle " << i << " direct neighbors: " << std::endl;
+        for (int j = 0; j < particleIndexVector[i]->getDirectNeighbors().size(); j++) {
+            int neighborIndex = particleIndexVector[i]->getDirectNeighbors()[j];
+            std::cout << "Particle " << neighborIndex << " position: "
+                      << particleIndexVector[neighborIndex]->getX()[0] << " "
+                      << particleIndexVector[neighborIndex]->getX()[1] << " "
+                      << particleIndexVector[neighborIndex]->getX()[2] << std::endl;
+        }
+        std::cout << "Particle " << i << " diagonal neighbors: " << std::endl;
+        for (int j = 0; j < particleIndexVector[i]->getDiagonalNeighbors().size(); j++) {
+            int neighborIndex = particleIndexVector[i]->getDiagonalNeighbors()[j];
+            std::cout << "Particle " << neighborIndex << " position: "
+                      << particleIndexVector[neighborIndex]->getX()[0] << " "
+                      << particleIndexVector[neighborIndex]->getX()[1] << " "
+                      << particleIndexVector[neighborIndex]->getX()[2] << std::endl;
+        }
+    }
+}
+
 
 // Iterate over a cubic area around the sphere with the given parameters and add a particle to container if it is inside the sphere boundaries
 void Generator::sphere(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,

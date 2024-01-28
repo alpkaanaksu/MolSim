@@ -74,8 +74,12 @@ void ParticleContainer::add(const nlohmann::json &objects) {
                 old_f = object["old_force"];
             }
 
-            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"],
-                         object["sigma"], object["type_id"], object["fixed"]});
+            add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"], object["sigma"], object["type_id"], 0.0, 0});
+            //add(Particle{object["position"], object["velocity"], f, old_f, object["mass"], object["epsilon"],
+            //             object["sigma"], object["type_id"], object["fixed"]});
+          
+          
+          
         } else if (object["type"] == "cuboid") {
             Generator::cuboid(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
                               object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
@@ -87,6 +91,12 @@ void ParticleContainer::add(const nlohmann::json &objects) {
                             object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["fixed"]);
         } else if (object["type"] == "checkpoint") {
             resolveCheckpoint(object["path"]);
+        } else if (object["type"] == "membrane") {
+            Generator::membrane(*this, object["position"], object["size"], object["mesh_width"], object["velocity"],
+                              object["mass"], object["type_id"], object["epsilon"], object["sigma"], object["avg_bond_length"], object["stiffness_factor"]);
+        } else {
+            spdlog::error("Unknown object type: " + object["type"].get<std::string>());
+            exit(-1);
         }
     }
 }
@@ -123,7 +133,8 @@ void ParticleContainer::remove(Particle &particle) {
     }
 }
 
-const std::vector <Particle> &ParticleContainer::getParticles() const {
+
+std::vector<Particle> &ParticleContainer::getParticles() {
     return particles;
 }
 

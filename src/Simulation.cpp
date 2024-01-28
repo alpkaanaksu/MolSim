@@ -115,6 +115,9 @@ Simulation::Simulation(const std::string &filepath) {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
         model = Model::lennardJonesModel(deltaT);
+    } else if (definition["simulation"]["model"] == "membrane") {
+        model = Model::membraneModel(deltaT);
+        membrane = true;
     } else if(definition["simulation"]["model"] == "smoothed_lennard_jones"){
         model = Model::smoothedLennardJonesModel(deltaT, definition["simulation"]["particle_container"]["cutoff_radius"], definition["simulation"]["particle_container"]["smooth_cutoff_radius"]);
     }
@@ -168,6 +171,8 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 }
 
 void Simulation::run() {
+    auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
+
     outputWriter::prepareOutputFolder(out);
     spdlog::info("Fixed particles: {}", fixedParticles);
 
@@ -183,13 +188,18 @@ void Simulation::run() {
         plotInterval = 30;
     }
 
+    std::array<double, 3> pullingForce = {0.0, 0.8, 0.0};
     auto resetForce = Model::resetForceFunction();
     auto force = model.forceFunction();
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
+    if (membrane && linkedCellParticleContainer != nullptr) {
+        linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+    } else {
+        particles->applyToAllPairsOnce(force);
+    }
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
@@ -207,23 +217,35 @@ void Simulation::run() {
     while (current_time <= endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
-        auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
 
         if (linkedCellParticleContainer != nullptr) {
             // particles points to a LinkedCellParticleContainer
             linkedCellParticleContainer->applyToAll(position, true);
+
         } else {
             particles->applyToAll(position);
         }
 
         // calculate new f
-        particles->applyToAll([&resetForce, this, &numberOfUpdates](Particle &p) {
+        particles->applyToAll([&resetForce, this, &numberOfUpdates, &pullingForce, &current_time, &linkedCellParticleContainer](Particle &p) {
             resetForce(p);
             p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+
+            // Pull
+            if(current_time < 150 && p.isPulled()) {
+                p.setF(p.getF() + pullingForce);
+            }
+
             numberOfUpdates++;
         });
 
-        particles->applyToAllPairsOnce(force);
+        if (membrane && linkedCellParticleContainer != nullptr) {
+            linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+        } else {
+            linkedCellParticleContainer->applyToAllPairsOnce(force);
+        }
+        
+    
 
         // calculate new v
         particles->applyToAll(velocity);
@@ -258,8 +280,8 @@ void Simulation::run() {
 
         double percentage = current_time / endTime * 100;
 
-        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time / endTime * 100
-                  << "% ] " << "\r" << std::flush;
+        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time << " (" << current_time / endTime * 100
+                  << "%) ] " << "\r" << std::flush;
 
         current_time += deltaT;
     }
