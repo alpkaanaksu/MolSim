@@ -4,10 +4,13 @@
 
 #pragma once
 
+#include <vector>
+#include <fstream>
 #include "string"
 #include "functional"
 #include "models/Model.h"
 #include "utils/Thermostat.h"
+#include "utils/ArrayUtils.h"
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
@@ -33,6 +36,8 @@ private:
     double gravity;
     Thermostat thermostat;
     bool fixedParticles;
+    std::vector<double> avgDensityPerBin;
+    std::vector<std::array<double, 3>> avgVelocityPerBin;
 
 public:
     /**
@@ -101,6 +106,8 @@ public:
     outputWriter::OutputType getOutputType() const;
 
     const Thermostat &getThermostat() const;
+
+    void computeProfiles(int iteration);
 
 };
 
