@@ -47,7 +47,6 @@ namespace Generator {
      * @param typeId
      */
     void disk(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,  std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, bool fixed);
-                std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma);
 
     void membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
                        double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor);

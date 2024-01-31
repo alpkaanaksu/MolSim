@@ -54,7 +54,8 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
                         avgBondLength,
                         stiffnessFactor,
                         //(x == 2 && y == 2) || (x == 2 && y == 3)
-                        (x == 17 && z == 24) || (x == 17 && z == 25) || (x == 18 && z == 24) || (x == 18 && z == 25)
+                        (x == 17 && z == 24) || (x == 17 && z == 25) || (x == 18 && z == 24) || (x == 18 && z == 25),
+                        false
                 };
 
                 for (int dx = -1; dx <= 1; dx++) {

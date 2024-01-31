@@ -542,7 +542,8 @@ void LinkedCellParticleContainer::handleBoundariesOneAxis(int boundaryCellIndex,
     for (auto &particle: cells[boundaryCellIndex]) {
         std::array<double, 3> updatedPosition = particle.getX();
         updatedPosition[axisIndex] += isLowerHalo ? -maxSize : maxSize;
-        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+        Particle newParticle = Particle(particle);
+        newParticle.setX(updatedPosition);
 
         addParticleToCell(haloCellIndex, newParticle);
     }
@@ -566,7 +567,8 @@ void LinkedCellParticleContainer::handleBoundariesTwoAxes(int boundaryCellIndex,
         updatedPosition[axisIndex1] += isLowerHalo1 ? -maxSize1 : maxSize1;
         updatedPosition[axisIndex2] += isLowerHalo2 ? -maxSize2 : maxSize2;
 
-        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+        Particle newParticle = Particle(particle);
+        newParticle.setX(updatedPosition);
 
         addParticleToCell(haloCellIndex, newParticle);
     }
@@ -594,7 +596,8 @@ void LinkedCellParticleContainer::handleBoundariesThreeAxes(int boundaryCellInde
         updatedPosition[1] += isLowerHalo2 ? -maxSize2 : maxSize2;
         updatedPosition[2] += isLowerHalo3 ? -maxSize3 : maxSize3;
 
-        Particle newParticle = Particle(updatedPosition, particle.getV(), particle.getM(), particle.getEpsilon(), particle.getSigma(), particle.getType());
+        Particle newParticle = Particle(particle);
+        newParticle.setX(updatedPosition);
 
         addParticleToCell(haloCellIndex, newParticle);
     }

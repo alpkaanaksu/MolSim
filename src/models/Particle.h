@@ -103,6 +103,9 @@ public:
              std::array<double, 3> old_f_arg, double m_arg, double eps, double sig, int type = 0,
              double avgBondLength_arg = 0.0, int stiffnessFactor_arg = 0, bool pulled_arg = false);
 
+    Particle(std::array<double, 3> x_arg, std::array<double, 3> v_arg,
+                   double m_arg, double eps, double sig, int type_arg, bool fix);
+
     const std::array<double, 3> &getV() const;
 
     const std::array<double, 3> &getF() const;
