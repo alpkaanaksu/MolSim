@@ -252,7 +252,7 @@ void Simulation::run() {
             checkpoints.pop();
         }
 
-        if (iteration % 100 == 0) {
+        if (iteration % 10000 == 0) {
             computeProfiles(iteration);
         }
 

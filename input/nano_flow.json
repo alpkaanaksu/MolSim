@@ -18,7 +18,7 @@
         "right": "outflow"
       }
     },
-    "end_time": 20,
+    "end_time": 500,
     "time_delta": 0.0005,
     "video_duration": 40,
     "frame_rate": 24,
