@@ -28,16 +28,8 @@
   },
   "objects": [
     {
-      "type": "cuboid",
-      "type_id": 1,
-      "position": [0.575, 0.575, 0.575],
-      "velocity": [0, 0, 0],
-      "size": [8, 8, 8],
-      "mesh_width": 1.15,
-      "mass": 1.0,
-      "sigma": 1.0,
-      "epsilon": 1.0
+      "type": "checkpoint",
+      "path": "./argon.cp.json"
     }
-  ],
-
+  ]
 }
