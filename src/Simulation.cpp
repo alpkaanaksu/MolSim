@@ -281,7 +281,7 @@ void Simulation::run() {
             plotParticles(iteration);
         }
 
-        if (iteration % 1000 == 0) {
+        if (iteration % 2000 == 0) {
             computeProfiles(iteration);
         }
 
