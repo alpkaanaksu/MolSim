@@ -8,6 +8,8 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
+#include <omp.h>
+
 #include "Particle.h"
 #include "../utils/ArrayUtils.h"
 
@@ -140,6 +142,9 @@ int LinkedCellParticleContainer::cellIndexForParticle(const Particle &particle) 
 
 void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function) {
     // Iterate through all cells in the container
+    #ifdef _OPENMP
+    #pragma omp parallel for schedule(dynamic) shared(cells)
+    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         // Skip halo cells
         if (!isHaloCellVector[cellIndex]) continue;

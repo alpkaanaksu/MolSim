@@ -17,6 +17,8 @@
 #include <spdlog/spdlog.h>
 #include <chrono>
 
+#include <omp.h>
+
 #include "models/LinkedCellParticleContainer.h"
 
 using json = nlohmann::json;
@@ -171,6 +173,15 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 }
 
 void Simulation::run() {
+    int numThreads = 1;
+
+    #ifdef _OPENMP
+    numThreads = omp_get_max_threads();
+    spdlog::info("OpenMP is available, running the simulation with {} thread(s).", numThreads);
+    #else
+    spdlog::info("OpenMP is not available, running the simulation with a single thread.");
+    #endif
+
     auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
 
     outputWriter::prepareOutputFolder(out);

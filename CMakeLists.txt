@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/libomp")
+
+include_directories("/opt/homebrew/opt/libomp/include")
+
 # define project name, version
 project(PSEMolDyn_GroupF VERSION 0.0.1)
 
@@ -35,6 +39,16 @@ target_compile_options(MolSim PRIVATE
         $<$<CXX_COMPILER_ID:GNU>:-Wall>
         $<$<CXX_COMPILER_ID:Intel>:-w3 -wd383,981,1418,1572,2259>
         )
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(MolSim PRIVATE "-ffast-math")
+endif()
+
+# enable OpenMP if available
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(MolSim PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 include(doxygen)
@@ -89,7 +103,7 @@ target_link_libraries(sources
         spdlog::spdlog
         nlohmann_json::nlohmann_json)
 
-target_link_libraries(MolSim sources)
+target_link_libraries(MolSim PUBLIC sources)
 
 # collect all cpp files for tests
 file(GLOB_RECURSE MY_TESTS
