@@ -186,7 +186,7 @@ responsible for copying particles from a boundary cell to the corresponding halo
 Z). In order to handle corner border cell cases for multiple periodic axes, we have implemented
 the `handleBoundariesTwoAxes` and `handleBoundariesThreeAxes` methods. These methods extend the functionality to handle
 periodic conditions along two/three axes simultaneously, providing flexibility for 2D/3D scenarios with different
-periodicities. Their implementation logic is the same as the auxiliary function handling only one axis, but they are
+periodicity. Their implementation logic is the same as the auxiliary function handling only one axis, but they are
 adjusted to function in multiple axes. `updateHaloCells` method calls these methods on boundary cells, if respective
 periodicity conditions are fulfilled, to ensure the periodicity of the simulation, maintaining accurate boundary
 conditions across all axes.
