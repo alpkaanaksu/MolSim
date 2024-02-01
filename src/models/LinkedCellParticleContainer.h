@@ -371,7 +371,24 @@ public:
     */
     void reflectIfNecessaryOnAxis(Particle &particle, double axisMin, double axisMax, int axisIndex);
 
-    void applyToAllPairsOnceMembrane(const std::function<void(Particle &, Particle &)> &function);
+    /**
+     * @brief Apply a given function to all unique pairs of particles in the LinkedCellParticleContainer, considering membrane interactions.
+     *
+     * This method iterates through cells in the container, applying the provided function to all unique pairs of particles within each cell.
+     * Additionally, it considers interactions with neighboring cells and applies membrane forces based on predefined conditions. The iteration
+     * of all particle pairs function similar to the applyToAllPairsOnce method, but with the addition of neighbor checks and membrane interactions.
+     *
+     * @param function A function to be applied to each unique pair of particles, taking two Particle references as parameters.
+     *                 The function should define the force interaction behavior between the particles.
+     *
+     * The method handles both direct and diagonal neighbors, applying harmonic potentials and truncated Lennard-Jones potentials to avoid self-penetration.
+     *
+     * @note The particles' neighbor relationships and membrane flexibility are considered based on the provided simulation requirements.
+     *
+     * @param cutoffRadius The cutoff radius for particle interactions, beyond which interactions are ignored.
+     */
+ void applyToAllPairsOnceMembrane(const std::function<void(Particle&, Particle&)>& function, double cutoffRadius);
+
 
 };
 

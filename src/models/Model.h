@@ -187,6 +187,21 @@ public:
     }
 
 
+    /**
+     * @brief Also generates a smoothed Lennard-Jones potential model for particle interactions.
+     *
+     * This L-J model functions same as the previous one, with the only difference potential function being truncated at a
+     * distance of 2^(1/6) * sigma, ensuring only the repulsive part is active to prevent self-penetration of the membrane.
+     *
+     * @param deltaT The time step for the simulation.
+     * @param cutoffRadius The cutoff radius for Lennard-Jones potential calculations.
+     * @param smoothedRadius The radius at which the potential is smoothly transitioned.
+     * @return A Model object representing the smoothed Lennard-Jones potential model.
+     *
+     * The smoothing effect is applied when the distance between particles is less than or equal to the specified smoothed radius.
+     * For distances beyond the smoothed radius but within the cutoff radius, a modified Lennard-Jones potential is used.
+     */
+
     static Model smoothedLennardJonesModel(double deltaT, double cutoffRadius, double smoothedRadius) {
         auto ljForce = [smoothedRadius, cutoffRadius](Particle &p1, Particle &p2) {
             auto epsilon = std::sqrt(p1.getEpsilon() * p2.getEpsilon());
