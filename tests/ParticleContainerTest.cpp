@@ -11,10 +11,10 @@ class ParticleContainerTest : public ::testing::Test {
 protected:
     // Set up the container and add 4 particles
     void BasicSetUp()  {
-        particle1 = Particle({0, 0, 0}, {1, 0, 0}, 1.0, 5, 1, 1);
-        particle2 = Particle({1, 2, 3}, {0, 1, 1}, 3.0, 5, 1, 2);
-        particle3 = Particle({0, 6, 0}, {1, 1, 0}, 6.0, 5, 1, 3);
-        particle4 = Particle({1, 7, 3}, {0, 1, 1}, 6.0, 5, 1, 4);
+        particle1 = Particle({0, 0, 0}, {1, 0, 0}, 1.0, 5, 1, 1, false);
+        particle2 = Particle({1, 2, 3}, {0, 1, 1}, 3.0, 5, 1, 2, false);
+        particle3 = Particle({0, 6, 0}, {1, 1, 0}, 6.0, 5, 1, 3, false);
+        particle4 = Particle({1, 7, 3}, {0, 1, 1}, 6.0, 5, 1, 4, false);
 
         particleContainer.add(particle1);
         particleContainer.add(particle2);
@@ -42,7 +42,7 @@ protected:
         for (int i = 0; i < 10; ++i) {
             Particle particle({distributionDouble(gen), distributionDouble(gen), distributionDouble(gen)},
                               {distributionDouble(gen), distributionDouble(gen), distributionDouble(gen)},
-                              distributionDouble(gen), 5, 1, distributionInt(gen));
+                              distributionDouble(gen), 5, 1, distributionInt(gen), false);
 
             spdlog::info("Initialized Particle {}: {}", i + 1, particle.toString());
 
@@ -75,7 +75,7 @@ TEST_F(ParticleContainerTest, TestAddParticle) {
     spdlog::info("Starting TestAddParticle");
 
     EXPECT_TRUE(particleContainer.size() == 4) << "Container size is incorrect after setup.";
-    Particle particle5 = Particle({0, 0, 0}, {1, 1, 0}, 1.0, 5, 1, 1);
+    Particle particle5 = Particle({0, 0, 0}, {1, 1, 0}, 1.0, 5, 1, 1, false);
     particleContainer.add(particle5);
     EXPECT_TRUE(particleContainer.size() == 5) << "Container size is incorrect after adding a particle.";
 
@@ -101,7 +101,7 @@ TEST_F(ParticleContainerTest, TestRemoveNonExistentParticle) {
     spdlog::info("Starting TestRemoveNonExistentParticle");
 
     EXPECT_TRUE(particleContainer.size() == 4) << "Container size is incorrect after setup.";
-    Particle nonExistentParticle({1.0, 1.0, 1.0}, {1.4, 1.2, 1.2}, 1.0, 5, 1, 5);
+    Particle nonExistentParticle({1.0, 1.0, 1.0}, {1.4, 1.2, 1.2}, 1.0, 5, 1, 5, false);
 
     //We did not add this particle to the container but are removing it
     particleContainer.remove(nonExistentParticle);
@@ -150,7 +150,8 @@ TEST_F(ParticleContainerTest, TestAddFromJson) {
                     {"mass", 2.5},
                     {"type_id", 2},
                     {"sigma", 1.0},
-                    {"epsilon", 5.0}
+                    {"epsilon", 5.0},
+                    {"fixed", false}
             },
             {
                     {"type", "particle"},
@@ -159,7 +160,8 @@ TEST_F(ParticleContainerTest, TestAddFromJson) {
                     {"mass", 2.5},
                     {"type_id", 3},
                     {"sigma", 1.0},
-                    {"epsilon", 5.0}
+                    {"epsilon", 5.0},
+                    {"fixed", false}
             }
     };
 
@@ -188,7 +190,8 @@ TEST_F(ParticleContainerTest, TestAddFromJson2) {
                     {"mass", 5.0},
                     {"type_id", 4},
                     {"sigma", 1.0},
-                    {"epsilon", 5.0}
+                    {"epsilon", 5.0},
+                    {"fixed", false}
             }
 
     };

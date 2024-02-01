@@ -9,7 +9,8 @@
 #include <spdlog/spdlog.h>
 
 void Generator::cuboid(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
-                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, bool fixed) {
+                       double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon,
+                       double sigma, bool fixed) {
     for (int x = 0; x < size[0]; x++) {
         for (int y = 0; y < size[1]; y++) {
             for (int z = 0; z < size[2]; z++) {
@@ -19,6 +20,8 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
                                                position[2] + z * meshWidth
                                        },
                                        velocity,
+                                       {0., 0., 0.},
+                                       {0., 0., 0.},
                                        mass,
                                        epsilon,
                                        sigma,
@@ -31,16 +34,17 @@ void Generator::cuboid(ParticleContainer &container, std::array<double, 3> posit
 }
 
 void Generator::membrane(ParticleContainer &container, std::array<double, 3> position, std::array<int, 3> size,
-                         double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, double avgBondLength, int stiffnessFactor) {
+                         double meshWidth, std::array<double, 3> velocity, double mass, int typeId, double epsilon,
+                         double sigma, double avgBondLength, int stiffnessFactor) {
 
-    std::vector<Particle*> particleIndexVector;
+    std::vector < Particle * > particleIndexVector;
 
     int nextId = 0;
 
     for (int x = 0; x < size[0]; x++) {
         for (int z = 0; z < size[2]; z++) {
             for (int y = 0; y < size[1]; y++) {
-                Particle* newParticle = new Particle {
+                Particle *newParticle = new Particle{
                         {
                                 position[0] + x * meshWidth,
                                 position[1] + y * meshWidth,
@@ -93,7 +97,8 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
     // Print out all particles' positions and their neighbors' positions (not ids)
     for (int i = 0; i < particleIndexVector.size(); i++) {
         std::cout << std::endl;
-        std::cout << "Particle " << i << " position: " << particleIndexVector[i]->getX()[0] << " " << particleIndexVector[i]->getX()[1] << " " << particleIndexVector[i]->getX()[2] << std::endl;
+        std::cout << "Particle " << i << " position: " << particleIndexVector[i]->getX()[0] << " "
+                  << particleIndexVector[i]->getX()[1] << " " << particleIndexVector[i]->getX()[2] << std::endl;
         std::cout << "Particle " << i << " direct neighbors: " << std::endl;
         for (int j = 0; j < particleIndexVector[i]->getDirectNeighbors().size(); j++) {
             int neighborIndex = particleIndexVector[i]->getDirectNeighbors()[j];
@@ -116,7 +121,8 @@ void Generator::membrane(ParticleContainer &container, std::array<double, 3> pos
 
 // Iterate over a cubic area around the sphere with the given parameters and add a particle to container if it is inside the sphere boundaries
 void Generator::sphere(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,
-                       std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, bool fixed) {
+                       std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma,
+                       bool fixed) {
 
     // Distance from the center to the edge of the sphere
     double dis = radius * meshWidth;
@@ -137,7 +143,8 @@ void Generator::sphere(ParticleContainer &container, std::array<double, 3> cente
 
                 // Check if the particle is inside the sphere boundaries
                 if (normalizedDistance <= radius) {
-                    container.add(Particle{position, velocity, mass, epsilon, sigma, typeId, fixed});
+                    container.add(Particle{position, velocity, {0., 0., 0.},
+                                           {0., 0., 0.}, mass, epsilon, sigma, typeId, fixed});
                 }
             }
         }
@@ -146,7 +153,8 @@ void Generator::sphere(ParticleContainer &container, std::array<double, 3> cente
 
 // Iterate over a square area around the disk with the given parameters and add a particle to container if it is inside the disk boundaries
 void Generator::disk(ParticleContainer &container, std::array<double, 3> center, int radius, double meshWidth,
-                       std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma, bool fixed) {
+                     std::array<double, 3> velocity, double mass, int typeId, double epsilon, double sigma,
+                     bool fixed) {
 
     double dis = radius * meshWidth;
     double minBoundX = center[0] - dis;
@@ -159,7 +167,8 @@ void Generator::disk(ParticleContainer &container, std::array<double, 3> center,
             std::array<double, 3> position = {x, y, center[2]};
             double normalizedDistance = ArrayUtils::L2Norm(position - center) / meshWidth;
             if (normalizedDistance <= radius) {
-                container.add(Particle{position, velocity, mass, epsilon, sigma,typeId, fixed});
+                container.add(Particle{position, velocity, {0., 0., 0.},
+                                       {0., 0., 0.}, mass, epsilon, sigma, typeId, fixed});
             }
         }
     }
