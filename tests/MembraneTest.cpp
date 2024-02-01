@@ -54,8 +54,6 @@ TEST_F(MembraneTest, MembraneNeighboursTest) {
         EXPECT_EQ(nonConstParticle.isDirectNeighbor(1), true);
         EXPECT_EQ(nonConstParticle.isDiagonalNeighbor(2), true);
     }
-
-    spdlog::info("hi {}", particlePosition);
     }
 
     TeardownParticleContainer();
