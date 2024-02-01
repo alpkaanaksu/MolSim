@@ -12,9 +12,8 @@
 class GeneratorTest : public ::testing::Test {
 protected:
     void TeardownParticleContainer() {
-        // Remove all particles added during random initialization
-        for (auto &randomParticle: cuboidParticles) {
-            particleContainer.remove(randomParticle);
+        for (auto &particle: cuboidParticles) {
+            particleContainer.remove(particle);
         }
         cuboidParticles.clear();
     }
