@@ -25,7 +25,7 @@
     "output_type": "disabled",
     "output_path": "output",
     "gravity": -12.44,
-    "parallelization_strategy": "neighbors"
+    "parallelization_strategy": "cells"
   },
   "objects": [
     {
