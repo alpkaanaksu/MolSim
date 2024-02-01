@@ -157,6 +157,12 @@ Simulation::Simulation(const std::string &filepath) {
 
     }
 
+    if (definition["simulation"].contains("parallelization_strategy")) {
+        parallelizationStrategy = stringToParallelizationStrategy(definition["simulation"]["parallelization_strategy"]);
+    } else {
+        parallelizationStrategy = ParallelizationStrategy::Cells;
+    }
+
     if (definition["simulation"].contains("checkpoints")) {
         for (auto &checkpoint: definition["simulation"]["checkpoints"]) {
             checkpoints.push(checkpoint);
@@ -214,7 +220,13 @@ void Simulation::run() {
     if (membrane && linkedCellParticleContainer != nullptr) {
         linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
     } else {
-        particles->applyToAllPairsOnce(force);
+        if (parallelizationStrategy == ParallelizationStrategy::Cells) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelCells(force);
+        } else if (parallelizationStrategy == ParallelizationStrategy::Neighbors) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelNeighbors(force);
+        } else {
+            particles->applyToAllPairsOnce(force);
+        }
     }
 
     // Brownian Motion with scaling factor
@@ -258,7 +270,13 @@ void Simulation::run() {
         if (membrane && linkedCellParticleContainer != nullptr) {
             linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
         } else {
-            linkedCellParticleContainer->applyToAllPairsOnce(force);
+            if (parallelizationStrategy == ParallelizationStrategy::Cells) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelCells(force);
+            } else if (parallelizationStrategy == ParallelizationStrategy::Neighbors) {
+                linkedCellParticleContainer->applyToAllPairsOnceParallelNeighbors(force);
+            } else {
+                particles->applyToAllPairsOnce(force);
+            }
         }
         
     
@@ -414,6 +432,7 @@ std::string Simulation::toString() const {
            << "\nReading from: " << in
            << "\nOutput to: " << out << '/'
            << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
+           << "\nParallelization strategy: " << parallelizationStrategyToString(parallelizationStrategy)
            << "\n" << particles->toString()
            << "\n========================\n";
 

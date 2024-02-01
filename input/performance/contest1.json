@@ -24,7 +24,8 @@
     "frame_rate": 24,
     "output_type": "disabled",
     "output_path": "output",
-    "gravity": -12.44
+    "gravity": -12.44,
+    "parallelization_strategy": "neighbors"
   },
   "objects": [
     {
