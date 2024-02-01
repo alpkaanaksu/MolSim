@@ -385,9 +385,8 @@ public:
      *
      * @note The particles' neighbor relationships and membrane flexibility are considered based on the provided simulation requirements.
      *
-     * @param cutoffRadius The cutoff radius for particle interactions, beyond which interactions are ignored.
      */
- void applyToAllPairsOnceMembrane(const std::function<void(Particle&, Particle&)>& function, double cutoffRadius);
+ void applyToAllPairsOnceMembrane(const std::function<void(Particle&, Particle&)>& function);
 
 
 };

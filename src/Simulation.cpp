@@ -176,6 +176,9 @@ void Simulation::run() {
     outputWriter::prepareOutputFolder(out);
     spdlog::info("Fixed particles: {}", fixedParticles);
 
+    std::ofstream csv_file("stats/flow.csv");
+    csv_file << "iteration,bin,avg_density,avg_velocity_x,avg_velocity_y,avg_velocity_z\n";
+    csv_file.close();
 
     double current_time = 0;
 
@@ -278,6 +281,10 @@ void Simulation::run() {
             plotParticles(iteration);
         }
 
+        if (iteration % 1000 == 0) {
+            computeProfiles(iteration);
+        }
+
         double percentage = current_time / endTime * 100;
 
         std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time << " (" << current_time / endTime * 100
@@ -332,6 +339,54 @@ void Simulation::plotParticles(int iteration) {
     if (writer != nullptr) {
         writer->plotParticles(*particles, out_name, iteration);
     }
+}
+
+void Simulation::computeProfiles(int iteration) {
+    // Amount of bins
+    const int N = 50;
+    double size {};
+
+    auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
+    if (linkedCellParticleContainer != nullptr) {
+        // particles points to a LinkedCellParticleContainer
+        size = linkedCellParticleContainer->getXSize();
+    }
+
+    // Initialize vectors for density and velocity profiles
+    avgDensityPerBin.assign(N, 0.0);
+    avgVelocityPerBin.assign(N, {0.0, 0.0, 0.0});
+
+    // Compute bin for each particle and accumulate statistics
+    particles->applyToAll([&](Particle &p) {
+        double x = p.getX()[0];
+        int binIndex = static_cast<int>((x / size) * 50);
+        avgDensityPerBin[binIndex] += 1;
+        for (int i = 0; i < 3; ++i) {
+            avgVelocityPerBin[binIndex][i] += p.getV()[i];
+        }
+    });
+
+    // Calculate averages per bin
+    for (int i = 0; i < N; ++i) {
+        avgDensityPerBin[i] /= size;
+        // Avoid division by zero
+        if (size != 0.0) {
+            for (int j = 0; j < 3; ++j) {
+                avgVelocityPerBin[i][j] /= size;
+            }
+        }
+    }
+
+    //spdlog::info("Writing statistics to CSV.");
+    std::ofstream csv_file("stats/flow.csv", std::ios::app);
+    for (int i = 0; i < N; i++) {
+        csv_file << iteration << "," << i << "," << avgDensityPerBin[i];
+        for (int j = 0; j < 3; j++) {
+            csv_file << "," << avgVelocityPerBin[i][j];
+        }
+        csv_file << "\n";
+    }
+    csv_file.close();
 }
 
 std::string Simulation::toString() const {

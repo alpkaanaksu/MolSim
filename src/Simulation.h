@@ -34,6 +34,8 @@ private:
     Thermostat thermostat;
     bool membrane = false;
     bool fixedParticles;
+    std::vector<double> avgDensityPerBin;
+    std::vector<std::array<double, 3>> avgVelocityPerBin;
 
 public:
     /**
@@ -102,6 +104,8 @@ public:
     outputWriter::OutputType getOutputType() const;
 
     const Thermostat &getThermostat() const;
+
+    void computeProfiles(int iteration);
 
 };
 
