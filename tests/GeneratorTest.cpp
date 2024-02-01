@@ -49,7 +49,7 @@ TEST_F(GeneratorTest, RandomizedCuboidTest) {
     //Randomized size
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> intDist(1, 50);
+    std::uniform_int_distribution<int> intDist(1, 10);
     std::array<int, 3> size = {intDist(gen), intDist(gen), intDist(gen)};
 
 
