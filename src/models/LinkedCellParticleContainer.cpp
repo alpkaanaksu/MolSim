@@ -8,7 +8,9 @@
 #include <spdlog/spdlog.h>
 #include <cmath>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "Particle.h"
 #include "../utils/ArrayUtils.h"

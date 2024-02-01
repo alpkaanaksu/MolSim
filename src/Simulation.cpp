@@ -17,7 +17,9 @@
 #include <spdlog/spdlog.h>
 #include <chrono>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "models/LinkedCellParticleContainer.h"
 
