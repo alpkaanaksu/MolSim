@@ -24,7 +24,7 @@
     "frame_rate": 24,
     "output_type": "vtk",
     "output_path": "output",
-    "gravity": -0.8
+    "gravity": -3
   },
   "objects": [
     {

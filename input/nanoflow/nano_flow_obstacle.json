@@ -1,0 +1,79 @@
+{
+    "simulation": {
+      "model": "lennard_jones",
+      "thermostat": {
+        "initial_temperature": 40,
+        "interval": 10,
+        "target_temperature": 40,
+        "dimension": 3,
+        "brownian": true
+      },
+      "particle_container": {
+        "type": "linked_cell",
+        "dimensions": [30, 30, 12],
+        "cutoff_radius": 2.75,
+        "boundary": {
+          "all": "periodic",
+          "left": "outflow",
+          "right": "outflow"
+        }
+      },
+      "end_time": 20,
+      "time_delta": 0.0005,
+      "video_duration": 40,
+      "frame_rate": 24,
+      "output_type": "vtk",
+      "output_path": "output",
+      "gravity": -3
+    },
+    "objects": [
+      {
+        "type": "cuboid",
+        "type_id": 1,
+        "position": [1.0, 0.5, 0.5],
+        "velocity": [0, 0, 0],
+        "size": [2, 30, 12],
+        "mesh_width": 1.0,
+        "mass": 1,
+        "sigma": 1.1,
+        "epsilon": 2.0,
+        "fixed": true
+      },
+      {
+        "type": "cuboid",
+        "type_id": 2,
+        "position": [27.2, 0.5, 0.5],
+        "velocity": [0, 0, 0],
+        "size": [2, 30, 12],
+        "mesh_width": 1.0,
+        "mass": 1,
+        "sigma": 1.1,
+        "epsilon": 2.0,
+        "fixed": true
+      },
+      {
+        "type": "cuboid",
+        "type_id": 3,
+        "position": [3.2, 12.6, 0.6],
+        "velocity": [0, 0, 0],
+        "size": [20, 12, 10],
+        "mesh_width": 1.2,
+        "mass": 1,
+        "sigma": 1,
+        "epsilon": 1,
+        "fixed": false
+      },
+      {
+        "type": "sphere",
+        "type_id": 4,
+        "center": [10, 9, 6],
+        "velocity": [0, 0, 0],
+        "radius": 3,
+        "mesh_width": 1.2,
+        "mass": 1,
+        "sigma": 1,
+        "epsilon": 1,
+        "fixed": true
+      }
+    ]
+  }
