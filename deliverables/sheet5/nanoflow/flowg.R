@@ -16,5 +16,8 @@ processed_data |>
   ggplot(aes(bin, avg_velocity_y, color = g)) +
   geom_point() +
   geom_line() +
-  labs(x="Bin Position (X-Axis)", y="Average Y-Velocity", title="Average Y-Velocity After 20 Time Units")
- 
+  labs(
+    x = "Bin Position (X-Axis)",
+    y = "Average Y-Velocity",
+    title = "Average Y-Velocity After 20 Time Units"
+  )

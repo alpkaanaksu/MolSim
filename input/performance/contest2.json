@@ -16,13 +16,14 @@
           "all": "periodic",
           "bottom": "reflective"        }
       },
-      "end_time": 100,
+      "end_time": 0.5,
       "time_delta": 0.0005,
       "video_duration": 40,
       "frame_rate": 24,
-      "output_type": "vtk",
+      "output_type": "none",
       "output_path": "output",
-      "gravity": -12.44
+      "gravity": -12.44,
+      "parallelization_strategy": "cells"
     },
     "objects": [
       {
