@@ -163,6 +163,7 @@ The harmonic potential is employed for both direct and diagonal neighbor interac
 based on the specified stiffness constant and average bond length.
 
 ## Parallelism
+
 During this practical course, we executed our program, often waiting for hours or even overnight for its completion.
 This hands-on experience, more than any other exercise, highlighted the significance of parallelism in enhancing
 efficiency and performance.
@@ -170,6 +171,7 @@ efficiency and performance.
 todo (speedup etc)
 
 Our application performs as expected both with and without OpenMP, a validation confirmed by our suite of tests.
+
 ## Rayleigh-Taylor Instability in 3D
 
 Essentially our implementation for the 2D case was designed to cover also the 3D case. However, we realized that within
@@ -192,3 +194,54 @@ periodicity conditions are fulfilled, to ensure the periodicity of the simulatio
 conditions across all axes.
 
 ## Nano-Scale Flow Simulation
+
+We opted for the nano-scale flow simulation in task 4. The addition of a new attribute,`fixed`, to the `Particle` class
+helped define and clearly distinguish non-moving objects within our simulation. Since `fixed` operates at the
+fundamental level
+of the project (`Particle.cpp`), restructuring the existing codebase posed little challenge, given that every simulation
+inherently involves particles.
+
+Regarding the new thermostat implementation, the corresponding velocity scaling method is chosen based on whether the
+input contains objects with fixed particles, cuboids, etc. If such objects exist, the method `scaleVelocitiesWithAvg` is
+called; otherwise, `scaleVelocities` from the last worksheet is employed. This approach simplifies the code and
+minimizes the need for modifications to accommodate future thermostats.
+
+The striking part of this simulation was its velocity and density profiles. As the flow is downwards due to the gravity
+factor and periodic boundaries, the y-component of particle velocities was of importance.
+![Gravity and flow plot](nanoflow/gravity_plot.png)
+For particles that are nearest to the boundaries, the downward velocity was generally lower compared to those located in
+the middle of the flow. This didn't change for varying gravity values as one would intuitively expect. The interaction
+between fixed wall particles and free flowing ones is more significant the closer they are to each-other. The movable
+particles, however cannot exert force on the fixed particles. This inability of movable particles to exert
+force on the fixed particles prevents a transfer of momentum that could otherwise counteract the localized suppression
+of acceleration. As a result, the downward velocity of particles near the boundaries remains subdued, creating a
+distinctive pattern in the particle dynamics within the simulation.
+![Flow after some time plot](nanoflow/plot.png)
+We notice similarities when comparing higher gravity values to the behavior observed after some time has elapsed. The
+average fluid velocity is influenced by two primary factors: temperature, which remains relatively constant due to the
+thermostat, and gravity. Similar to an object in free fall, the velocity increases over time.
+
+The profiles reminded us of the [no-slip condition](https://en.wikipedia.org/wiki/No-slip_condition), which enforces
+that at a solid boundary, a viscous fluid attains zero bulk velocity. This concept has been successful in solving
+problems related to bigger flows for the past two centuries. However, when dealing with fluid transport at the micro-
+and nanoscale, things get more complex according to
+some [research](https://www.beilstein-journals.org/bjnano/articles/12/91). In these tiny systems, there's a possibility
+that liquids don't adhere perfectly to solid surfaces, causing what's known as liquid slippage. It was fascinating to
+observe how our nano-scale simulation behaves at boundaries.
+
+Placing a fixed sphere helped us observe the turbulence that occurred and had this cool plot:
+![Flow after some time plot](nanoflow/plot_obstacle.png)
+We also attempted to investigate how different σ values affect the profiles using two different fluids within the same
+simulation, similar to the approach in Rayleigh-Taylor instability. However, we didn't observe anything significant in
+the profiles. Perhaps adhering to one variable factor at a time would have been a better approach.
+
+
+
+
+
+
+
+
+
+
+
