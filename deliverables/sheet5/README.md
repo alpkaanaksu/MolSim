@@ -234,14 +234,3 @@ Placing a fixed sphere helped us observe the turbulence that occurred and had th
 We also attempted to investigate how different σ values affect the profiles using two different fluids within the same
 simulation, similar to the approach in Rayleigh-Taylor instability. However, we didn't observe anything significant in
 the profiles. Perhaps adhering to one variable factor at a time would have been a better approach.
-
-
-
-
-
-
-
-
-
-
-

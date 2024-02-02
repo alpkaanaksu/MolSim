@@ -141,12 +141,115 @@ int LinkedCellParticleContainer::cellIndexForParticle(const Particle &particle) 
     return (xIndex + 1) + (yIndex + 1) * xCells + (zIndex + 1) * xCells * yCells;
 }
 
+void LinkedCellParticleContainer::applyToAllPairsOnceParallelNeighbors(const std::function<void(Particle &, Particle &)> &function) {
+    // Iterate through all cells in the container
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        // Skip halo cells
+        if (!isHaloCellVector[cellIndex]) continue;
+
+        auto coords = index1dTo3d(cellIndex);
+        auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
+
+        // Iterate through all pairs of particles in the same cell
+        for (int i = 0; i < firstCell.size(); i++) {
+            for (int j = i + 1; j < firstCell.size(); j++) {
+                // Check if the pair has been processed before by comparing memory addresses
+                if (&firstCell[i] < &firstCell[j] && firstCell[i].distanceTo(firstCell[j]) <= cutoffRadius) {
+                    function(firstCell[i], firstCell[j]);
+                }
+            }
+        }
+
+        // Iterate through neighboring cells
+        #ifdef _OPENMP
+        #pragma omp parallel for
+        #endif
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    int neighborX = coords[0] + x;
+                    int neighborY = coords[1] + y;
+                    int neighborZ = coords[2] + z;
+
+                    /*if (neighborX <= 0 || neighborX >= xCells - 1
+                        || neighborY <= 0 || neighborY >= yCells - 1
+                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
+
+                    if (x == 0 && y == 0 && z == 0) continue;
+
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
+
+                    for (auto &p1: firstCell) {
+                        for (auto &p2: currentCell) {
+                            // Check if the pair has been processed before by comparing memory addresses
+                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius) {
+                                function(p1, p2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void LinkedCellParticleContainer::applyToAllPairsOnceParallelCells(const std::function<void(Particle &, Particle &)> &function) {
+    // Iterate through all cells in the container
+    #ifdef _OPENMP
+    #pragma omp parallel for schedule(dynamic)
+    #endif
+    for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
+        // Skip halo cells
+        if (!isHaloCellVector[cellIndex]) continue;
+
+        auto coords = index1dTo3d(cellIndex);
+        auto &firstCell = cells[cellIndex];  // Extract the vector of particles from the pair
+
+        // Iterate through all pairs of particles in the same cell
+        for (int i = 0; i < firstCell.size(); i++) {
+            for (int j = i + 1; j < firstCell.size(); j++) {
+                // Check if the pair has been processed before by comparing memory addresses
+                if (&firstCell[i] < &firstCell[j] && firstCell[i].distanceTo(firstCell[j]) <= cutoffRadius) {
+                    function(firstCell[i], firstCell[j]);
+                }
+            }
+        }
+
+        // Iterate through neighboring cells
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    int neighborX = coords[0] + x;
+                    int neighborY = coords[1] + y;
+                    int neighborZ = coords[2] + z;
+
+                    /*if (neighborX <= 0 || neighborX >= xCells - 1
+                        || neighborY <= 0 || neighborY >= yCells - 1
+                        || neighborZ <= 0 || neighborZ >= zCells - 1) continue;*/
+
+                    if (x == 0 && y == 0 && z == 0) continue;
+
+                    int neighborIndex = index3dTo1d(neighborX, neighborY, neighborZ);
+                    auto &currentCell = cells[neighborIndex];  // Extract vector from the pair
+
+                    for (auto &p1: firstCell) {
+                        for (auto &p2: currentCell) {
+                            // Check if the pair has been processed before by comparing memory addresses
+                            if ((&p1 < &p2 || !isHaloCellVector[neighborIndex]) && p1.distanceTo(p2) <= cutoffRadius) {
+                                function(p1, p2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 void LinkedCellParticleContainer::applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function) {
     // Iterate through all cells in the container
-    #ifdef _OPENMP
-    #pragma omp parallel for schedule(dynamic) shared(cells)
-    #endif
     for (int cellIndex = 0; cellIndex < cells.size(); cellIndex++) {
         // Skip halo cells
         if (!isHaloCellVector[cellIndex]) continue;

@@ -125,6 +125,28 @@ public:
     virtual void applyToAllPairsOnce(const std::function<void(Particle &, Particle &)> &function);
 
     /**
+     * @brief Apply a lambda function to all particle pairs (parallelized)
+     * Checks the neighbor cells
+     * Each combination is iterated only once (e.g. useful for Newton's 3rd law)
+     * @param function
+     * 
+     * @note This method is parallelized using OpenMP parallel for
+     * 
+    */
+    void applyToAllPairsOnceParallelNeighbors(const std::function<void(Particle &, Particle &)> &function);
+
+    /**
+     * @brief Apply a lambda function to all particle pairs (parallelized)
+     * Checks the neighbor cells
+     * Each combination is iterated only once (e.g. useful for Newton's 3rd law)
+     * @param function
+     * 
+     * @note This method is parallelized using OpenMP parallel pragma
+     * 
+    */
+    void applyToAllPairsOnceParallelCells(const std::function<void(Particle &, Particle &)> &function);
+
+    /**
      * @brief Apply a lambda function to all particles
      * @param function
      */

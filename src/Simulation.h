@@ -11,6 +11,7 @@
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
+#include "models/ParallelizationStrategy.h"
 #include <queue>
 
 /**
@@ -36,6 +37,7 @@ private:
     bool fixedParticles;
     std::vector<double> avgDensityPerBin;
     std::vector<std::array<double, 3>> avgVelocityPerBin;
+    ParallelizationStrategy parallelizationStrategy;
 
 public:
     /**
