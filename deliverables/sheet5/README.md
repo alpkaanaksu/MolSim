@@ -10,7 +10,7 @@
 
 - Link:     https://github.com/alpkaanaksu/MolSim
 - Branch:   master
-- Revision: 35d61c5dfe2e5e20d47b182a88764ed6029b2ffc
+- Revision: a67015b2fa1326f47820aab6ed309b2bfb4675a3
 
 **Works with:**
 
@@ -23,6 +23,7 @@
 ## Compiling and running the program
 
 - You need `xerces-c` and `boost` (`program_options` and `filesystem`) to compile the program.
+- If you need parallelism, you need install `OpenMP`.
 
 ```bash
 mkdir build # if it does not exist
@@ -41,16 +42,12 @@ make
 ```
 
 ```bash
-./MolSim ../input/sphere.json
+./MolSim ../input/rayleigh-taylor-instability/3d.json
 ```
-
-The last line starts the program to run the simulation specified in `input/sphere.json` with the parameters defined in
-the JSON file. It is the simulation of a drop falling against a reflective boundary, it uses our new
-LinkedCellParticleContainer.
 
 ---
 
-`./MolSim --help` shows you all possible CLI arguments.
+Set the environment variable `OMP_NUM_THREADS` to the number of threads you want to use for parallelism.
 
 ### Doxygen
 
@@ -59,53 +56,6 @@ make doc_doxygen
 ```
 
 An online version of the documentation can be found [here](https://alpkaanaksu.github.io/MolSim/).
-
-## Simulation Description in JSON
-
-(*See sheet 2 report for more details on how we implemented this.*)
-
-We decided to continue using JSON for our input files since we already had a working implementation.
-
-### Structure of Input Files
-
-The general structure remains the same: the object has a `simulation` and an `objects` field. `simulation` includes all
-meta information about the simulation, including information about the particle container. `objects` includes all
-objects that are part of the simulation, currently, objects can be single particles, cuboids, spheres or disks. For
-cuboids, spheres and disks, corresponding functions from the `Generator` namespace, e.g. `Generator::disk`, are used to
-add multiple particles to the container.
-
-Setting the output interval is currently only indirectly possible by setting the `video_duration` and `frame_rate`
-fields in the `simulation` object. Allowing direct input of the output interval would be trivial, but we wanted to **
-keep our program opinionated** in this regard: We only use the output files for visualizing our particles in ParaView,
-specifying the output interval would be an indirect way of influencing the duration and frame rate of the video. We let
-the user have **meaningful control** over the output, **without any guesswork** (i.e. 'What is the optimal interval for
-my ParaView configuration? Let's try some.'). But you can still let us know if you think it is crucial to be able to set
-the plot interval. We also see being able to change the output folder as a better alternative to changing the base file
-name, so we also decided to go with it.
-
-### Describing a Particle Container
-
-The `particle_container` field of the `simulation` includes all relevant information to build a particle
-container. `dimensions` determine the size of the domain, `cutoff_radius` is pretty self-explanatory.
-
-The `boundary` field is more interesting, it can be used to set boundary conditions for the container. It is possible to
-specify a different value for each side (we call the sides `top`, `bottom`, `left`, `right`, `front`, `back`). You can
-also use the `all` shorthand if you want all boundaries to behave the same.
-
-Inspired by CSS, more specific 'selectors' override less specific ones. For example, if you set `all` to `reflective`
-and `right` to `outflow`, the right boundary will be `outflow` and all other boundaries will be `reflective`.
-
-```
-"particle_container": {
-  "type": "linked_cell",
-  "dimensions": [120, 50, 3],
-  "cutoff_radius": 3,
-  "boundary": {
-    "all": "reflective",
-    "right": "outflow"
-  }
-},
-```
 
 ## Simulation of a Membrane
 
@@ -164,11 +114,21 @@ based on the specified stiffness constant and average bond length.
 
 ## Parallelism
 
-During this practical course, we executed our program, often waiting for hours or even overnight for its completion.
-This hands-on experience, more than any other exercise, highlighted the significance of parallelism in enhancing
-efficiency and performance.
+During this practical course, we executed our program, often waiting for hours or even overnight for its completion. This hands-on experience, more than any other exercise, highlighted the significance of parallelism in enhancing efficiency and performance.
 
-todo (speedup etc)
+One of our parallelization ideas was to parallelize the cell and particle iteration 
+in the ‘applyAllPairsOnce’ method for pairwise force calculation and the 
+results showed that it enhanced the performance significantly. In the last worksheet, we saw that the force calculation is the most time-consuming part of the simulation. Therefore, we decided to parallelize the force calculation part of the simulation, force calculation also does not use any dynamic values that can be changed by other threads during the force calculation, this makes it really easy to avoid race conditions. We also use dynamic scheduling to ensure that the work is distributed evenly to threads, maximazing the performance gain.
+
+We also tried other approaches for parallelization, e.g. parallelizing also 
+‘applyToAll’ method etc. However all of these approaches caused one of the 
+two following problems: either the overhead resulting from threads was so 
+high (especially because of many critical regions) or the result wasn’t 
+deterministic, as critical regioning wasn’t applied correctly. In all of the cases 
+this dilemma forced us to actually not employ the respective parallelization 
+approach. We also tried to parallelize the visit of neighbor cells instead of the processing of the cells, but this also didn't work out, because the overhead of creating threads was too high, it made our program even slower, but we still kept the code in the repository, because we had to implement 2 strategies.
+
+You can specify the parallelization method in the input file by setting `parallelization_strategy` to `"cells"`, `"neighbors"` or `"none"`.
 
 Our application performs as expected both with and without OpenMP, a validation confirmed by our suite of tests.
 
@@ -243,3 +203,67 @@ the profiles. Perhaps adhering to one variable factor at a time would have been 
 
 ## Crystallization of Argon 
 We implemented the coolest part of the task with the smoothed LJ, to perform the experiments out of curiosity.
+
+## Contest 2
+
+Instructions are very similar to the first one, just create two new job scripts:
+
+```bash
+echo '#!/bin/bash
+#SBATCH -J molsimf2
+#SBATCH -o ./%x.%j.%N.out
+#SBATCH -D ./
+#SBATCH --get-user-env
+#SBATCH --clusters=cm2_tiny
+#SBATCH --partition=cm2_tiny
+#SBATCH --nodes=1-1
+#SBATCH --cpus-per-task=28
+#SBATCH --mail-type=end
+#SBATCH --mail-user=<your email here>
+#SBATCH --export=NONE
+#SBATCH --time=00:02:00
+
+module load slurm_setup
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+ 
+./MolSim ../input/performance/contest1.json' > molsimf2.cmd
+```
+
+```bash
+echo '#!/bin/bash
+#SBATCH -J molsimf3
+#SBATCH -o ./%x.%j.%N.out
+#SBATCH -D ./
+#SBATCH --get-user-env
+#SBATCH --clusters=cm2_tiny
+#SBATCH --partition=cm2_tiny
+#SBATCH --nodes=1-1
+#SBATCH --cpus-per-task=56
+#SBATCH --mail-type=end
+#SBATCH --mail-user=<your email here>
+#SBATCH --export=NONE
+#SBATCH --time=00:05:00
+
+module load slurm_setup
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+ 
+./MolSim ../input/performance/contest2.json' > molsimf3.cmd
+```
+
+and submit them to cluster: ```sbatch molsimf2.cmd``` and ```sbatch molsimf3.cmd```.
+
+We got the following results:
+
+**2D:**
+```
+[2024-02-02 01:25:18.750] [info] Time: 4.996
+[2024-02-02 01:25:18.750] [info] MUP/s: 2001416.202105
+```
+
+**3D:**
+```
+[2024-02-02 01:26:55.846] [info] Time: 71.911
+[2024-02-02 01:26:55.846] [info] MUP/s: 1390590.604828
+```
