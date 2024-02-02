@@ -243,9 +243,3 @@ the profiles. Perhaps adhering to one variable factor at a time would have been 
 
 ## Crystallization of Argon 
 We implemented the coolest part of the task with the smoothed LJ, to perform the experiments out of curiosity.
-
-<video width="320" height="240" controls>
-  <source src="argon_supercooling.mp4" type="supercooling/mp4">
-  Your browser does not support the video tag.
-</video>
-
