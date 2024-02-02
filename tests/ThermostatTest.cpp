@@ -97,9 +97,13 @@ TEST_F(ThermostatTest, HeatingGradualSmallMaxTemperature) {
     EXPECT_EQ(simulation.getThermostat().getTargetTemperature(), 20);
 
     EXPECT_GE(simulation.getThermostat().getCurrentTemperature(*particles),
-              simulation.getThermostat().getInitialTemperature());
+              simulation.getThermostat().getInitialTemperature() - 1);
     EXPECT_LE(simulation.getThermostat().getCurrentTemperature(*particles),
-              simulation.getThermostat().getTargetTemperature());
+              simulation.getThermostat().getTargetTemperature() + 1);
+
+    // The +-1 is there to avoid misinterpretation of how the thermostat works.
+    // Because there is a maximum temperature change in each round of velocity scaling,
+    // the current temperature at the end of the simulation can be a bit off regarding the target temperature.
 
     EXPECT_TRUE(notNear(simulation.getThermostat().getCurrentTemperature(*particles), 20, 1e-3));
 }

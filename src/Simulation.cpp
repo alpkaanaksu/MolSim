@@ -17,6 +17,10 @@
 #include <spdlog/spdlog.h>
 #include <chrono>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "models/LinkedCellParticleContainer.h"
 
 using json = nlohmann::json;
@@ -109,11 +113,17 @@ Simulation::Simulation(const std::string &filepath) {
               : 0.0;
 
     particles->add(definition["objects"]);
+    fixedParticles = particles->containsFixedObject(definition["objects"]);
 
     if (definition["simulation"]["model"] == "basic") {
         model = Model::gravityModel(deltaT);
     } else if (definition["simulation"]["model"] == "lennard_jones") {
         model = Model::lennardJonesModel(deltaT);
+    } else if (definition["simulation"]["model"] == "membrane") {
+        model = Model::membraneModel(deltaT);
+        membrane = true;
+    } else if(definition["simulation"]["model"] == "smoothed_lennard_jones"){
+        model = Model::smoothedLennardJonesModel(deltaT, definition["simulation"]["particle_container"]["cutoff_radius"], definition["simulation"]["particle_container"]["smooth_cutoff_radius"]);
     }
 
     if (definition["simulation"].contains("thermostat")) {
@@ -147,8 +157,14 @@ Simulation::Simulation(const std::string &filepath) {
 
     }
 
-    if(definition["simulation"].contains("checkpoints")){
-        for(auto &checkpoint : definition["simulation"]["checkpoints"]){
+    if (definition["simulation"].contains("parallelization_strategy")) {
+        parallelizationStrategy = stringToParallelizationStrategy(definition["simulation"]["parallelization_strategy"]);
+    } else {
+        parallelizationStrategy = ParallelizationStrategy::Cells;
+    }
+
+    if (definition["simulation"].contains("checkpoints")) {
+        for (auto &checkpoint: definition["simulation"]["checkpoints"]) {
             checkpoints.push(checkpoint);
         }
     }
@@ -165,7 +181,23 @@ Simulation::Simulation(Model model, double endTime, double deltaT, int videoDura
 }
 
 void Simulation::run() {
+    int numThreads = 1;
+
+    #ifdef _OPENMP
+    numThreads = omp_get_max_threads();
+    spdlog::info("OpenMP is available, running the simulation with {} thread(s).", numThreads);
+    #else
+    spdlog::info("OpenMP is not available, running the simulation with a single thread.");
+    #endif
+
+    auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
+
     outputWriter::prepareOutputFolder(out);
+    spdlog::info("Fixed particles: {}", fixedParticles);
+
+    std::ofstream csv_file("stats/flow.csv");
+    csv_file << "iteration,bin,avg_density,avg_velocity_x,avg_velocity_y,avg_velocity_z\n";
+    csv_file.close();
 
     double current_time = 0;
 
@@ -178,13 +210,24 @@ void Simulation::run() {
         plotInterval = 30;
     }
 
+    std::array<double, 3> pullingForce = {0.0, 0.8, 0.0};
     auto resetForce = Model::resetForceFunction();
     auto force = model.forceFunction();
     auto position = model.positionFunction();
     auto velocity = model.velocityFunction();
 
     // Calculate initial force to avoid starting with 0 force
-    particles->applyToAllPairsOnce(force);
+    if (membrane && linkedCellParticleContainer != nullptr) {
+        linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+    } else {
+        if (parallelizationStrategy == ParallelizationStrategy::Cells) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelCells(force);
+        } else if (parallelizationStrategy == ParallelizationStrategy::Neighbors) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelNeighbors(force);
+        } else {
+            particles->applyToAllPairsOnce(force);
+        }
+    }
 
     // Brownian Motion with scaling factor
     if (thermostat.getNumDimensions() != -1 && thermostat.isInitializeWithBrownianMotion()) {
@@ -196,45 +239,66 @@ void Simulation::run() {
 
     auto before = std::chrono::high_resolution_clock::now();
 
-    long numberOfUpdates { 0 };
+    long numberOfUpdates{0};
 
     // for this loop, we assume: current x, current f and current v are known
     while (current_time <= endTime) {
         // calculate new x
         // Try to cast to LinkedCellParticleContainer
-        auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
 
         if (linkedCellParticleContainer != nullptr) {
             // particles points to a LinkedCellParticleContainer
             linkedCellParticleContainer->applyToAll(position, true);
+
         } else {
             particles->applyToAll(position);
         }
 
         // calculate new f
-        particles->applyToAll([&resetForce, this, &numberOfUpdates](Particle &p) {
+        particles->applyToAll([&resetForce, this, &numberOfUpdates, &pullingForce, &current_time, &linkedCellParticleContainer](Particle &p) {
             resetForce(p);
             p.setF(p.getF() + Model::verticalGravityForce(p.getM(), gravity));
+
+            // Pull
+            if(current_time < 150 && p.isPulled()) {
+                p.setF(p.getF() + pullingForce);
+            }
+
             numberOfUpdates++;
         });
 
-        particles->applyToAllPairsOnce(force);
+        if (membrane && linkedCellParticleContainer != nullptr) {
+            linkedCellParticleContainer->applyToAllPairsOnceMembrane(force);
+        } else {
+            if (parallelizationStrategy == ParallelizationStrategy::Cells) {
+            linkedCellParticleContainer->applyToAllPairsOnceParallelCells(force);
+            } else if (parallelizationStrategy == ParallelizationStrategy::Neighbors) {
+                linkedCellParticleContainer->applyToAllPairsOnceParallelNeighbors(force);
+            } else {
+                particles->applyToAllPairsOnce(force);
+            }
+        }
+        
+    
 
         // calculate new v
-        particles->applyToAll([&velocity, &numberOfUpdates](Particle &p){
-            velocity(p);
-        });
+        particles->applyToAll(velocity);
 
         iteration++;
 
         if (thermostat.getNumDimensions() != -1 && iteration % thermostat.getThermostatInterval() == 0) {
-            thermostat.scaleVelocities(*particles);
+            if (fixedParticles) {
+                thermostat.scaleVelocitiesWithAvg(*particles);
+            } else {
+                thermostat.scaleVelocities(*particles);
+            }
+
         }
 
 
         if (nextCheckpoint != -1 && current_time >= nextCheckpoint) {
             std::ostringstream oss;
-            oss << std::setprecision(2) <<  nextCheckpoint;
+            oss << std::setprecision(2) << nextCheckpoint;
             std::string checkpointStr = oss.str();
 
             spdlog::info("Checkpoint " + checkpointStr + " reached. Saving simulation to file.");
@@ -248,10 +312,14 @@ void Simulation::run() {
             plotParticles(iteration);
         }
 
+        if (iteration % 2000 == 0) {
+            computeProfiles(iteration);
+        }
+
         double percentage = current_time / endTime * 100;
 
-        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time / endTime * 100
-                  << "% ] " << "\r" << std::flush;
+        std::cout << std::fixed << std::setprecision(2) << "Running simulation: [ " << current_time << " (" << current_time / endTime * 100
+                  << "%) ] " << "\r" << std::flush;
 
         current_time += deltaT;
     }
@@ -304,6 +372,54 @@ void Simulation::plotParticles(int iteration) {
     }
 }
 
+void Simulation::computeProfiles(int iteration) {
+    // Amount of bins
+    const int N = 50;
+    double size {};
+
+    auto linkedCellParticleContainer = dynamic_cast<LinkedCellParticleContainer *>(particles.get());
+    if (linkedCellParticleContainer != nullptr) {
+        // particles points to a LinkedCellParticleContainer
+        size = linkedCellParticleContainer->getXSize();
+    }
+
+    // Initialize vectors for density and velocity profiles
+    avgDensityPerBin.assign(N, 0.0);
+    avgVelocityPerBin.assign(N, {0.0, 0.0, 0.0});
+
+    // Compute bin for each particle and accumulate statistics
+    particles->applyToAll([&](Particle &p) {
+        double x = p.getX()[0];
+        int binIndex = static_cast<int>((x / size) * 50);
+        avgDensityPerBin[binIndex] += 1;
+        for (int i = 0; i < 3; ++i) {
+            avgVelocityPerBin[binIndex][i] += p.getV()[i];
+        }
+    });
+
+    // Calculate averages per bin
+    for (int i = 0; i < N; ++i) {
+        avgDensityPerBin[i] /= size;
+        // Avoid division by zero
+        if (size != 0.0) {
+            for (int j = 0; j < 3; ++j) {
+                avgVelocityPerBin[i][j] /= size;
+            }
+        }
+    }
+
+    //spdlog::info("Writing statistics to CSV.");
+    std::ofstream csv_file("stats/flow.csv", std::ios::app);
+    for (int i = 0; i < N; i++) {
+        csv_file << iteration << "," << i << "," << avgDensityPerBin[i];
+        for (int j = 0; j < 3; j++) {
+            csv_file << "," << avgVelocityPerBin[i][j];
+        }
+        csv_file << "\n";
+    }
+    csv_file.close();
+}
+
 std::string Simulation::toString() const {
     std::stringstream stream;
     stream << "\n====== Simulation ======"
@@ -316,6 +432,7 @@ std::string Simulation::toString() const {
            << "\nReading from: " << in
            << "\nOutput to: " << out << '/'
            << "\nOutput type: " << outputWriter::outputTypeToString(outputType)
+           << "\nParallelization strategy: " << parallelizationStrategyToString(parallelizationStrategy)
            << "\n" << particles->toString()
            << "\n========================\n";
 
@@ -346,7 +463,7 @@ std::string Simulation::getOutputPath() const {
     return out;
 }
 
-std::shared_ptr<ParticleContainer> Simulation::getParticles() const {
+std::shared_ptr <ParticleContainer> Simulation::getParticles() const {
     return particles;
 }
 

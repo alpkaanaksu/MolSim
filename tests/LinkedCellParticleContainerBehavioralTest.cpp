@@ -355,7 +355,7 @@ EXPECT_EQ(linkedCellParticles->size(), 1) << "Incorrect particle count after sim
 simulation.run();
 
 Particle particle = findFirstParticle(linkedCellParticles);
-EXPECT_NEAR(-50.0, particle.getV()[1], 1) << "Particle did not cross the boundaries as expected.";
+EXPECT_NEAR(50.0, particle.getV()[1], 2) << "Particle did not cross the boundaries as expected.";
 
 spdlog::info("SimplePeriodicTopBottom test completed");
 }

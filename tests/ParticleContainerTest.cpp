@@ -10,11 +10,11 @@
 class ParticleContainerTest : public ::testing::Test {
 protected:
     // Set up the container and add 4 particles
-    void BasicSetUp()  {
-        particle1 = Particle({0, 0, 0}, {1, 0, 0}, 1.0, 5, 1, 1);
-        particle2 = Particle({1, 2, 3}, {0, 1, 1}, 3.0, 5, 1, 2);
-        particle3 = Particle({0, 6, 0}, {1, 1, 0}, 6.0, 5, 1, 3);
-        particle4 = Particle({1, 7, 3}, {0, 1, 1}, 6.0, 5, 1, 4);
+    void BasicSetUp() {
+        particle1 = Particle({0, 0, 0}, {1, 0, 0}, {0, 0, 0}, {0, 0, 0}, 1.0, 5, 1, 1, false);
+        particle2 = Particle({1, 2, 3}, {0, 1, 1}, {0, 0, 0}, {0, 0, 0}, 3.0, 5, 1, 2, false);
+        particle3 = Particle({0, 6, 0}, {1, 1, 0}, {0, 0, 0}, {0, 0, 0}, 6.0, 5, 1, 3, false);
+        particle4 = Particle({1, 7, 3}, {0, 1, 1}, {0, 0, 0}, {0, 0, 0}, 6.0, 5, 1, 4, false);
 
         particleContainer.add(particle1);
         particleContainer.add(particle2);
@@ -24,7 +24,7 @@ protected:
     }
 
     // Clean up
-    void BasicTearDown()  {
+    void BasicTearDown() {
         particleContainer.remove(particle1);
         particleContainer.remove(particle2);
         particleContainer.remove(particle3);
@@ -42,7 +42,7 @@ protected:
         for (int i = 0; i < 10; ++i) {
             Particle particle({distributionDouble(gen), distributionDouble(gen), distributionDouble(gen)},
                               {distributionDouble(gen), distributionDouble(gen), distributionDouble(gen)},
-                              distributionDouble(gen), 5, 1, distributionInt(gen));
+                              distributionDouble(gen), 5, 1, distributionInt(gen), false);
 
             spdlog::info("Initialized Particle {}: {}", i + 1, particle.toString());
 
@@ -52,7 +52,7 @@ protected:
 
     void TeardownAfterRandomParticles() {
         // Remove all particles added during random initialization
-        for (auto &randomParticle : randomParticles) {
+        for (auto &randomParticle: randomParticles) {
             particleContainer.remove(randomParticle);
         }
         // Clear all
@@ -66,196 +66,289 @@ protected:
     Particle particle4;
 
     // stores the random particles to remove them from the container later on
-    std::vector<Particle> randomParticles;
+    std::vector <Particle> randomParticles;
 };
 
 //Simple test case for add(const Particle &particle)
-TEST_F(ParticleContainerTest, TestAddParticle) {
-    BasicSetUp();
-    spdlog::info("Starting TestAddParticle");
+TEST_F(ParticleContainerTest, TestAddParticle
+) {
+BasicSetUp();
 
-    EXPECT_TRUE(particleContainer.size() == 4) << "Container size is incorrect after setup.";
-    Particle particle5 = Particle({0, 0, 0}, {1, 1, 0}, 1.0, 5, 1, 1);
-    particleContainer.add(particle5);
-    EXPECT_TRUE(particleContainer.size() == 5) << "Container size is incorrect after adding a particle.";
+spdlog::info("Starting TestAddParticle");
 
-    spdlog::info("TestAddParticle completed");
-    BasicTearDown();
+EXPECT_TRUE(particleContainer
+.
+
+size()
+
+== 4) << "Container size is incorrect after setup.";
+Particle particle5 = Particle({0, 0, 0}, {1, 1, 0}, {0, 0, 0}, {0, 0, 0}, 1.0, 5, 1, 1, false);
+particleContainer.
+add(particle5);
+EXPECT_TRUE(particleContainer
+.
+
+size()
+
+== 5) << "Container size is incorrect after adding a particle.";
+
+spdlog::info("TestAddParticle completed");
+
+BasicTearDown();
+
 }
 
 // Test case to check if removing a particle decrements the size of the container.
-TEST_F(ParticleContainerTest, TestRemoveParticle) {
-    BasicSetUp();
-    spdlog::info("Starting TestRemoveParticle");
+TEST_F(ParticleContainerTest, TestRemoveParticle
+) {
+BasicSetUp();
 
-    EXPECT_TRUE(particleContainer.size() == 4) << "Container size is incorrect after setup.";
-    particleContainer.remove(particle2);
-    EXPECT_TRUE(particleContainer.size() == 3) << "Container size is incorrect after removing a particle.";
+spdlog::info("Starting TestRemoveParticle");
 
-    spdlog::info("TestRemoveParticle completed");
-    BasicTearDown();
+EXPECT_TRUE(particleContainer
+.
+
+size()
+
+== 4) << "Container size is incorrect after setup.";
+particleContainer.
+remove(particle2);
+EXPECT_TRUE(particleContainer
+.
+
+size()
+
+== 3) << "Container size is incorrect after removing a particle.";
+
+spdlog::info("TestRemoveParticle completed");
+
+BasicTearDown();
+
 }
 
-TEST_F(ParticleContainerTest, TestRemoveNonExistentParticle) {
-    BasicSetUp();
-    spdlog::info("Starting TestRemoveNonExistentParticle");
+TEST_F(ParticleContainerTest, TestRemoveNonExistentParticle
+) {
+BasicSetUp();
 
-    EXPECT_TRUE(particleContainer.size() == 4) << "Container size is incorrect after setup.";
-    Particle nonExistentParticle({1.0, 1.0, 1.0}, {1.4, 1.2, 1.2}, 1.0, 5, 1, 5);
+spdlog::info("Starting TestRemoveNonExistentParticle");
 
-    //We did not add this particle to the container but are removing it
-    particleContainer.remove(nonExistentParticle);
-    EXPECT_EQ(particleContainer.size(), 4) << "Container size changed after attempting to remove a non-existent particle.";
-    BasicTearDown();
+EXPECT_TRUE(particleContainer
+.
+
+size()
+
+== 4) << "Container size is incorrect after setup.";
+Particle nonExistentParticle({1.0, 1.0, 1.0}, {1.4, 1.2, 1.2}, {0, 0, 0}, {0, 0, 0}, 1.0, 5, 1, 5, false);
+
+//We did not add this particle to the container but are removing it
+particleContainer.
+remove(nonExistentParticle);
+EXPECT_EQ(particleContainer
+.
+
+size(),
+
+4) << "Container size changed after attempting to remove a non-existent particle.";
+
+BasicTearDown();
 
 }
 
 
 // Test case to check if applying a function to all particles works as expected.
-TEST_F(ParticleContainerTest, TestApplyToAll) {
-    BasicSetUp();
-    spdlog::info("Starting TestApplyToAll");
+TEST_F(ParticleContainerTest, TestApplyToAll
+) {
+BasicSetUp();
 
-    // Map that stores all particles and their key, which is a boolean value to track if all particles are processed by applyToAll
-    std::unordered_map<const Particle *, bool> processedMap;
+spdlog::info("Starting TestApplyToAll");
 
-    // applyToAll should set all corresponding keys to true
-    particleContainer.applyToAll([&processedMap](Particle &p) {
-        processedMap[&p] = true;
-    });
+// Map that stores all particles and their key, which is a boolean value to track if all particles are processed by applyToAll
+std::unordered_map<const Particle *, bool> processedMap;
 
-    // Check if all particles have been processed.
-    for (const auto &particle: particleContainer.getParticles()) {
-        EXPECT_TRUE(processedMap[&particle]) << "Function was not applied to all particles!";
-        EXPECT_TRUE(processedMap.find(&particle) != processedMap.end()) << "Function was not applied to all particles!";
-    }
-    spdlog::info("TestApplyToAll completed");
-    BasicTearDown();
+// applyToAll should set all corresponding keys to true
+particleContainer.applyToAll([&processedMap](
+Particle &p
+) {
+processedMap[&p] = true;
+});
+
+// Check if all particles have been processed.
+for (
+const auto &particle
+: particleContainer.
+
+getParticles()
+
+) {
+EXPECT_TRUE(processedMap[&particle])
+<< "Function was not applied to all particles!";
+EXPECT_TRUE(processedMap
+.
+find(&particle)
+!= processedMap.
+
+end()
+
+) << "Function was not applied to all particles!";
+}
+spdlog::info("TestApplyToAll completed");
+
+BasicTearDown();
 
 }
 
 // Test case for adding particles from a JSON configuration
-TEST_F(ParticleContainerTest, TestAddFromJson) {
-    BasicSetUp();
-    spdlog::info("Starting TestAddFromJson");
+TEST_F(ParticleContainerTest, TestAddFromJson
+) {
+BasicSetUp();
 
-    EXPECT_EQ(particleContainer.size(), 4) << "Container size is incorrect after setup.";
+spdlog::info("Starting TestAddFromJson");
 
-    // JSON configuration with 2 particles
-    nlohmann::json jsonConfig = {
-            {
-                    {"type", "particle"},
-                    {"position", {2, 2, 2}},
-                    {"velocity", {0, 0, 0}},
-                    {"mass", 2.5},
-                    {"type_id", 2},
-                    {"sigma", 1.0},
-                    {"epsilon", 5.0}
-            },
-            {
-                    {"type", "particle"},
-                    {"position", {1, 2, 2}},
-                    {"velocity", {0, 0, 0}},
-                    {"mass", 2.5},
-                    {"type_id", 3},
-                    {"sigma", 1.0},
-                    {"epsilon", 5.0}
-            }
-    };
+EXPECT_EQ(particleContainer
+.
 
-    particleContainer.add(jsonConfig);
-    EXPECT_EQ(particleContainer.size(), 6) << "Size is incorrect after adding particles from JSON.";
+size(),
 
-    spdlog::info("TestAddFromJson completed");
-    BasicTearDown();
+4) << "Container size is incorrect after setup.";
+
+// JSON configuration with 2 particles
+nlohmann::json jsonConfig = {
+        {
+                {"type", "particle"},
+                {"position", {2, 2, 2}},
+                {"velocity", {0, 0, 0}},
+                {"mass", 2.5},
+                {"type_id", 2},
+                {"sigma", 1.0},
+                {"epsilon", 5.0},
+                {"fixed", false}
+        },
+        {
+                {"type", "particle"},
+                {"position", {1, 2, 2}},
+                {"velocity", {0, 0, 0}},
+                {"mass", 2.5},
+                {"type_id", 3},
+                {"sigma", 1.0},
+                {"epsilon", 5.0},
+                {"fixed", false}
+        }
+};
+
+particleContainer.
+add(jsonConfig);
+EXPECT_EQ(particleContainer
+.
+
+size(),
+
+6) << "Size is incorrect after adding particles from JSON.";
+
+spdlog::info("TestAddFromJson completed");
+
+BasicTearDown();
+
 }
 
 
 // Test case for adding particles from a JSON configuration
-TEST_F(ParticleContainerTest, TestAddFromJson2) {
-    BasicSetUp();
-    spdlog::info("Starting TestAddFromJson2");
-    EXPECT_EQ(particleContainer.size(), 4) << "Container size is incorrect after setup.";
+TEST_F(ParticleContainerTest, TestAddFromJson2
+) {
+BasicSetUp();
 
-    // JSON configuration with a cuboid of dimensions 2 x 2 x 2, i.e. 8 particles
-    nlohmann::json jsonConfig = {
-            {
-                    {"type", "cuboid"},
-                    {"position", {1, 1, 1}},
-                    {"size", {2, 2, 2}},
-                    {"mesh_width", 0.1},
-                    {"velocity", {1, 0, 0}},
-                    {"mass", 5.0},
-                    {"type_id", 4},
-                    {"sigma", 1.0},
-                    {"epsilon", 5.0}
-            }
+spdlog::info("Starting TestAddFromJson2");
+EXPECT_EQ(particleContainer
+.
 
-    };
-    particleContainer.add(jsonConfig);
+size(),
 
-    //4 initial particles + 8 particles from the cuboid
-    EXPECT_EQ(particleContainer.size(), 12) << "Size is incorrect after adding particles from JSON.";
-    spdlog::info("TestAddFromJson2 completed");
-    BasicTearDown();
+4) << "Container size is incorrect after setup.";
+
+// JSON configuration with a cuboid of dimensions 2 x 2 x 2, i.e. 8 particles
+nlohmann::json jsonConfig = {
+        {
+                {"type", "cuboid"},
+                {"position", {1, 1, 1}},
+                {"size", {2, 2, 2}},
+                {"mesh_width", 0.1},
+                {"velocity", {1, 0, 0}},
+                {"mass", 5.0},
+                {"type_id", 4},
+                {"sigma", 1.0},
+                {"epsilon", 5.0},
+                {"fixed", false}
+        }
+
+};
+particleContainer.
+add(jsonConfig);
+
+//4 initial particles + 8 particles from the cuboid
+EXPECT_EQ(particleContainer
+.
+
+size(),
+
+12) << "Size is incorrect after adding particles from JSON.";
+spdlog::info("TestAddFromJson2 completed");
+
+BasicTearDown();
 
 }
 
 // Test case for ApplyToAllPairsOnce using a counter
-TEST_F(ParticleContainerTest, TestApplyToAllPairsOnce) {
-    BasicSetUp();
-    spdlog::info("Starting TestApplyToAllPairsOnce");
+TEST_F(ParticleContainerTest, TestApplyToAllPairsOnce
+) {
+BasicSetUp();
 
-    int functionCallCount = 0;
+spdlog::info("Starting TestApplyToAllPairsOnce");
 
-    // Function to increment the counter and log the particle indices
-    auto testFunction = [&functionCallCount](Particle &p1, Particle &p2) {
-        functionCallCount++;
-        spdlog::info("Function called for particles of the type {} and {}", p1.getType(), p2.getType());
-    };
+int functionCallCount = 0;
 
-    // Apply the function to all pairs of particles
-    particleContainer.applyToAllPairsOnce(testFunction);
+// Function to increment the counter and log the particle indices
+auto testFunction = [&functionCallCount](Particle &p1, Particle &p2) {
+    functionCallCount++;
+    spdlog::info("Function called for particles of the type {} and {}", p1.getType(), p2.getType());
+};
 
-    // Calculate the expected number of function calls/ pairs
-    // for N particles!
-    int expectedCalls = particleContainer.size() * (particleContainer.size() - 1) / 2;
-    EXPECT_EQ(functionCallCount, expectedCalls) << "Function is not called for all unique pairs of particles.";
-    spdlog::info("TestApplyToAllPairsOnce completed");
-    BasicTearDown();
+// Apply the function to all pairs of particles
+particleContainer.
+applyToAllPairsOnce(testFunction);
+
+// Calculate the expected number of function calls/ pairs
+// for N particles!
+int expectedCalls = particleContainer.size() * (particleContainer.size() - 1) / 2;
+EXPECT_EQ(functionCallCount, expectedCalls
+) << "Function is not called for all unique pairs of particles.";
+spdlog::info("TestApplyToAllPairsOnce completed");
+
+BasicTearDown();
 
 }
 
 // Test case for ApplyToAllPairs using a counter approach
-TEST_F(ParticleContainerTest, TestApplyToAllPairs) {
-    BasicSetUp();
-    spdlog::info("Starting TestApplyToAllPairs");
+TEST_F(ParticleContainerTest, TestApplyToAllPairs
+) {
+BasicSetUp();
 
-    int functionCallCount = 0;
-    auto testFunction = [&functionCallCount](Particle &p1, Particle &p2) {
-        functionCallCount++;
-        spdlog::info("Function called for particles of the type {} and {}", p1.getType(), p2.getType());
-    };
-    particleContainer.applyToAllPairs(testFunction);
-    int expectedCalls = particleContainer.size() * (particleContainer.size() - 1);
-    EXPECT_EQ(functionCallCount, expectedCalls) << "Function is not called for all unique pairs of particles.";
-    spdlog::info("TestApplyToAllPairs completed");
-    BasicTearDown();
+spdlog::info("Starting TestApplyToAllPairs");
+
+int functionCallCount = 0;
+auto testFunction = [&functionCallCount](Particle &p1, Particle &p2) {
+    functionCallCount++;
+    spdlog::info("Function called for particles of the type {} and {}", p1.getType(), p2.getType());
+};
+particleContainer.
+applyToAllPairs(testFunction);
+int expectedCalls = particleContainer.size() * (particleContainer.size() - 1);
+EXPECT_EQ(functionCallCount, expectedCalls
+) << "Function is not called for all unique pairs of particles.";
+spdlog::info("TestApplyToAllPairs completed");
+
+BasicTearDown();
 
 }
 
-/*
-// Test case for add(const Particle &particle) with random particles
-TEST_F(ParticleContainerTest, TestAddRandomParticles) {
-    initializeRandomParticles();
-    spdlog::info("Starting TestAddRandomParticles");
-    EXPECT_TRUE(particleContainer.size() == 10);
-    randomParticles = particleContainer.getParticles();
-    TeardownAfterRandomParticles();
-    ASSERT_TRUE(particleContainer.size() == 0);
-    spdlog::info("TestAddRandomParticles completed");
-}
-*/
 
 
 

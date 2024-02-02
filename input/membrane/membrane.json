@@ -1,0 +1,36 @@
+{
+    "simulation": {
+      "model": "membrane",
+      "particle_container": {
+        "type": "linked_cell",
+        "dimensions": [148, 148, 148],
+        "cutoff_radius": 4,
+        "boundary": {
+          "all": "outflow",
+          "bottom": "reflective"
+        }
+      },
+      "end_time": 500,
+      "time_delta": 0.01,
+      "video_duration": 40,
+      "frame_rate": 24,
+      "output_type": "vtk",
+      "output_path": "output",
+      "gravity": -0.001
+    },
+    "objects": [
+      {
+        "type": "membrane",
+        "type_id": 1,
+        "position": [15, 15, 1.5],
+        "velocity": [0, 0, 0],
+        "size": [50, 1, 50],
+        "mesh_width": 2.2,
+        "mass": 1,
+        "sigma": 1,
+        "epsilon": 1,
+        "stiffness_factor": 300,
+        "avg_bond_length": 2.2
+      }
+    ]
+  }

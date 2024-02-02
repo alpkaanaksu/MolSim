@@ -11,6 +11,7 @@
 #include "models/ParticleContainer.h"
 #include "io/outputWriter/Writer.h"
 #include "io/outputWriter/OutputType.h"
+#include "models/ParallelizationStrategy.h"
 #include <queue>
 
 /**
@@ -32,6 +33,11 @@ private:
     std::queue<double> checkpoints;
     double gravity;
     Thermostat thermostat;
+    bool membrane = false;
+    bool fixedParticles;
+    std::vector<double> avgDensityPerBin;
+    std::vector<std::array<double, 3>> avgVelocityPerBin;
+    ParallelizationStrategy parallelizationStrategy;
 
 public:
     /**
@@ -100,6 +106,8 @@ public:
     outputWriter::OutputType getOutputType() const;
 
     const Thermostat &getThermostat() const;
+
+    void computeProfiles(int iteration);
 
 };
 
