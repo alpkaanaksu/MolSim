@@ -208,7 +208,9 @@ minimizes the need for modifications to accommodate future thermostats.
 
 The striking part of this simulation was its velocity and density profiles. As the flow is downwards due to the gravity
 factor and periodic boundaries, the y-component of particle velocities was of importance.
+
 ![Gravity and flow plot](nanoflow/gravity_plot.png)
+
 For particles that are nearest to the boundaries, the downward velocity was generally lower compared to those located in
 the middle of the flow. This didn't change for varying gravity values as one would intuitively expect. The interaction
 between fixed wall particles and free flowing ones is more significant the closer they are to each-other. The movable
@@ -216,7 +218,9 @@ particles, however cannot exert force on the fixed particles. This inability of 
 force on the fixed particles prevents a transfer of momentum that could otherwise counteract the localized suppression
 of acceleration. As a result, the downward velocity of particles near the boundaries remains subdued, creating a
 distinctive pattern in the particle dynamics within the simulation.
+
 ![Flow after some time plot](nanoflow/plot.png)
+
 We notice similarities when comparing higher gravity values to the behavior observed after some time has elapsed. The
 average fluid velocity is influenced by two primary factors: temperature, which remains relatively constant due to the
 thermostat, and gravity. Similar to an object in free fall, the velocity increases over time.
@@ -230,7 +234,9 @@ that liquids don't adhere perfectly to solid surfaces, causing what's known as l
 observe how our nano-scale simulation behaves at boundaries.
 
 Placing a fixed sphere helped us observe the turbulence that occurred and had this cool plot:
+
 ![Flow after some time plot](nanoflow/plot_obstacle.png)
+
 We also attempted to investigate how different σ values affect the profiles using two different fluids within the same
 simulation, similar to the approach in Rayleigh-Taylor instability. However, we didn't observe anything significant in
 the profiles. Perhaps adhering to one variable factor at a time would have been a better approach.
