@@ -240,3 +240,11 @@ Placing a fixed sphere helped us observe the turbulence that occurred and had th
 We also attempted to investigate how different σ values affect the profiles using two different fluids within the same
 simulation, similar to the approach in Rayleigh-Taylor instability. However, we didn't observe anything significant in
 the profiles. Perhaps adhering to one variable factor at a time would have been a better approach.
+
+## Crystallization of Argon 
+We implemented the coolest part of the task with the smoothed LJ, to perform the experiments out of curiosity.
+
+<video width="320" height="240" controls>
+  <source src="argon_supercooling.mp4" type="supercooling/mp4">
+  Your browser does not support the video tag.
+</video>
