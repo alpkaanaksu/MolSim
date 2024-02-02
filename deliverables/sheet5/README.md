@@ -201,6 +201,9 @@ We also attempted to investigate how different σ values affect the profiles usi
 simulation, similar to the approach in Rayleigh-Taylor instability. However, we didn't observe anything significant in
 the profiles. Perhaps adhering to one variable factor at a time would have been a better approach.
 
+## Crystallization of Argon 
+We implemented the coolest part of the task with the smoothed LJ, to perform the experiments out of curiosity.
+
 ## Contest 2
 
 Instructions are very similar to the first one, just create two new job scripts:
